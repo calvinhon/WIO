@@ -89,4 +89,4 @@ Based on the problem statement, here is HAAC's curated list of **AI-based tools 
 
 ### 🔶 Workflow Chart
 
-![WorkFlow chart](mermaid_20250708_4458eb.png)
+![WorkFlow chart](https://ibb.co/3YGKKn4p)
