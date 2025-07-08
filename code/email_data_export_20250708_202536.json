@@ -1,0 +1,95 @@
+{
+  "emails": [
+    [
+      "197ea038354ad840",
+      "Your ADCB Credit Card Statement - Account Ending 1234 - [Statement Date: 08 July 2025]",
+      "Calvin Hon <calvin.r.hon@gmail.com>",
+      "Tue, 8 Jul 2025 16:29:34 +0400",
+      "Dear Mr. Alex Johnson, Your latest ADCB Credit Card statement for your card ending 1234 is now available. Statement Period: 09 June 2025 - 08 July 2025 Statement Date: 08 July 2025 Payment Due Date: 29",
+      "[\"protection\", \"-protected\", \"123415011980\", \"2025\", \"1980\", \"2030\", \"1234DDMMYYYY\", \"123401011990\", \"1990\", \"would\", \"1234\"]",
+      "[]",
+      "[\"downloads/ADDC_20250708_193915.pdf\"]",
+      1751977774,
+      "Dear Mr. Alex Johnson,\r\n\r\nYour latest ADCB Credit Card statement for your card ending *1234* is now\r\navailable.\r\n\r\n*Statement Period:* 09 June 2025 - 08 July 2025 *Statement Date:* 08 July\r\n2025 *Payment Due Date:* 29 July 2025 *New Balance:* AED 1,275.00 *Minimum\r\nAmount Due:* AED 63.75\r\n\r\nFor your security, your statement is attached as a password-protected PDF.\r\n\r\n*The password to open the PDF is the last four digits of your ADCB Credit\r\nCard number (1234) followed by your Date of Birth in DDMMYYYY format (e.g.,\r\nif your Date of Birth is 15 January 1980, the password would be\r\n123415011980).*\r\n\r\nYou can view your detailed statement and make a payment through our secure\r\nchannels:\r\n\r\n   -\r\n\r\n   *ADCB Personal Internet Banking:* Log in at www.adcb.com\r\n   -\r\n\r\n   *ADCB Mobile Banking App:* Available on the App Store and Google Play\r\n   -\r\n\r\n   *ADCB ATMs and Branches*\r\n\r\nWe recommend paying your New Balance in full by the due date to avoid any\r\ninterest charges.\r\n\r\nShould you have any questions or require assistance, please do not hesitate\r\nto contact our Customer Service at 600 50 2030.\r\n\r\nThank you for banking with ADCB.\r\n\r\nSincerely,\r\n\r\nADCB Customer Service Team www.adcb.com\r\n------------------------------\r\n\r\nTo create the PDF:\r\n\r\n   1.\r\n\r\n   Copy the \"Mock ADCB Credit Card Bill Content\" into a document editor\r\n   (like Microsoft Word or Google Docs).\r\n   2.\r\n\r\n   Format it to resemble an official bank statement, including placeholders\r\n   for the ADCB logo, clear headings, and tabular data.\r\n   3.\r\n\r\n   Save or print the document as a PDF.\r\n   4.\r\n\r\n   *Crucially, use a PDF editor or a dedicated PDF creation tool (many PDF\r\n   printers have this option) to add password protection to the generated PDF.*\r\n   When setting the password, ensure it follows the format described in the\r\n   email (e.g., 1234DDMMYYYY where 1234 are the last four digits of the\r\n   card and DDMMYYYY is the hypothetical date of birth of Mr. Alex Johnson,\r\n   let's say 01 January 1990, so the password would be 123401011990).\r\n",
+      "2025-07-08T19:39:15.685148"
+    ],
+    [
+      "197e9e461f4ed21b",
+      "Sample Bank Email Subject: Your TechBank Platinum Card Statement is Ready - Payment Due July 25, 2025",
+      "Calvin Hon <calvin.r.hon@gmail.com>",
+      "Tue, 8 Jul 2025 15:55:33 +0400",
+      "Dear Sarah Johnson, Your TechBank Platinum Card statement for the period ending June 30, 2025 is now available. Account Summary: Account Number: --****-4567 Statement Date: June 30, 2025 Payment Due",
+      "[\"4567\", \"0123\", \"2025\"]",
+      "[]",
+      "[\"downloads/29392439431_20250708_193918.pdf\"]",
+      1751975733,
+      "Dear Sarah Johnson,\r\n\r\nYour TechBank Platinum Card statement for the period ending June 30, 2025\r\nis now available.\r\n\r\n*Account Summary:*\r\n\r\n   - Account Number: *-*-****-4567\r\n   - Statement Date: June 30, 2025\r\n   - Payment Due Date: *July 25, 2025*\r\n   - Total Amount Due: *$1,247.83*\r\n   - Minimum Payment Due: *$37.43*\r\n\r\n*Important Reminders:*\r\n\r\n   - Your payment must be received by 5:00 PM ET on July 25, 2025 to avoid\r\n   late fees\r\n   - Late fee: $29.00 if minimum payment is not received by due date\r\n   - You can view your full statement in the attached PDF or log into your\r\n   online account\r\n\r\n*Quick Payment Options:*\r\n\r\n   - Online: techbank.com/pay\r\n   - Phone: 1-800-TECHBANK\r\n   - Mobile App: TechBank Mobile\r\n\r\nThank you for choosing TechBank. If you have any questions about your\r\nstatement, please contact us at 1-800-555-0123.\r\n\r\nBest regards,\r\nTechBank Customer Service Team\r\n------------------------------\r\n\r\n*This is an automated message. Please do not reply to this email. For\r\ncustomer service, visit techbank.com/support <http://techbank.com/support>\r\nor call 1-800-555-0123.*\r\n\r\n*Security Notice:* TechBank will never ask for your personal information\r\nvia email. If you receive suspicious emails, please forward them to\r\nsecurity@techbank.com.\r\n",
+      "2025-07-08T19:39:18.231982"
+    ],
+    [
+      "197eab1a88309dfa",
+      "Fwd: Statement of FAB Card ending with 6591 dated:23-Dec-2024 (4565)",
+      "N TH <nthoach@gmail.com>",
+      "Tue, 8 Jul 2025 19:39:45 +0400",
+      "--- Nguyen The Hoach Research Scientist Electrical Engineering and Computer Science Khalifa University, SAN Campus ---------- Forwarded message --------- From: N TH &lt;nthoach@gmail.com&gt; Date: Tue,",
+      "[\"19804567\", \"4567\", \"2025\", \"will\", \"4565\", \"6591\", \"C101804271\", \"2024\", \"1980\", \"-protected.\", \"id1383237548\"]",
+      "[\"password is:\\r\\nYour year of birth, followed by the last four digits of your registered\", \"password will be *19804567*\"]",
+      "[\"downloads/EStatement_20250708_194004.PDF\"]",
+      1751989185,
+      "---\r\nNguyen The Hoach\r\nResearch Scientist\r\nElectrical Engineering and Computer Science\r\nKhalifa University, SAN Campus\r\n\r\n\r\n---------- Forwarded message ---------\r\nFrom: N TH <nthoach@gmail.com>\r\nDate: Tue, Jul 8, 2025 at 6:33\u202fPM\r\nSubject: Fwd: Statement of FAB Card ending with 6591 dated:23-Dec-2024\r\n(4565)\r\nTo: 42.haac@gmail.com <42.haac@gmail.com>\r\n\r\n\r\n\r\n\r\nView your FAB e-statement\r\nDear MR. NGUYEN THE HOACH,\r\n\r\nPlease find attached the e-statement for your Credit Card number ending in\r\n6591 for 23-Dec-2024.\r\n\r\nThis e-statement is password-protected.\r\nPlease follow the instructions below to open your e-statement:\r\n1. Click on the attachment provided with this mail.\r\n2. You will be prompted to enter your 8-digit password.\r\n3. Your password is:\r\nYour year of birth, followed by the last four digits of your registered\r\nmobile number. For example, if your year of birth is *1980* and your mobile\r\nnumber is *050 123 4567*, then your password will be *19804567*.\r\nYou can also view your e-statement, transaction history and card details on\r\nthe FAB Mobile app.\r\n[image: logo]\r\n<https://itunes.apple.com/ae/app/fab-mobile-banking/id1383237548?mt=8> [image:\r\nlogo] <http://bit.ly/fabPlayStore> [image: logo]\r\n<https://appgallery.huawei.com/#/app/C101804271>\r\nHELP & SUPPORT <https://www.bankfab.com/en-ae/personal/help-and-support>\r\n\u2022 VISIT\r\nBANKFAB.COM <https://bankfab.com> \u2022 PRIVACY POLICY\r\n<https://www.bankfab.com/en-ae/privacy-policy>\r\nImportant: Do not reply to this email.\r\n  [image: logo] <https://www.facebook.com/FAB/> [image: logo]\r\n<https://www.instagram.com/fabconnects> [image: logo]\r\n<https://www.linkedin.com/company/first-abu-dhabi-bank> [image: logo]\r\n<https://twitter.com/fabconnects> [image: logo]\r\n<https://www.youtube.com/channel/UCyXhrKqYwuvsvquPuqgSPrA>\r\n",
+      "2025-07-08T19:40:04.254988"
+    ]
+  ],
+  "personal_data": [
+    [
+      1,
+      "date_of_birth",
+      "100384",
+      "Date of birth (DDMMYYYY format)",
+      "2025-07-08T19:36:01.506454"
+    ],
+    [
+      2,
+      "mobile_number",
+      "971525562885",
+      "Mobile/Phone number",
+      "2025-07-08T19:36:15.039924"
+    ],
+    [
+      3,
+      "first_name",
+      "Nguyen",
+      "First name",
+      "2025-07-08T19:36:19.779380"
+    ],
+    [
+      4,
+      "last_name",
+      "Hoach",
+      "Last name",
+      "2025-07-08T19:36:22.304739"
+    ],
+    [
+      5,
+      "card_number_last4",
+      "0411",
+      "Last 4 digits of credit card",
+      "2025-07-08T19:36:27.589359"
+    ],
+    [
+      6,
+      "account_number_last4",
+      "2036",
+      "Last 4 digits of account number",
+      "2025-07-08T19:36:30.464925"
+    ],
+    [
+      7,
+      "national_id_last4",
+      "2036",
+      "Last 4 digits of national ID",
+      "2025-07-08T19:36:34.312307"
+    ]
+  ],
+  "exported_at": "2025-07-08T20:25:36.677682"
+}
