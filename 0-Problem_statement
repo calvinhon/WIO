@@ -1,0 +1,52 @@
+
+
+Title
+Problem Statement
+Objective:
+Challenge No. 1
+Part 1 - Due-Date Reminders & Notifications from SMS
+On-device NLP parses bank/issuer SMS messages to track:
+Upcoming due dates, minimum & total amounts due -Payment confirmations
+Features:
+-Local (privacy-preserving) SMS parsing
+-Smart reminder engine (suppresses alerts if payment detected, schedules around salary dates, etc.)
+-Mobile dashboard of upcoming dues and statuses
+Points: 100
+-50 Points for Reading/Parsing the different SMS formats even new ones and finding the:
+a. due date
+b. total amount
+c. remaining amount
+-50 Points for finding if any Payments has been made.
+
+
+Title
+Problem Statement
+Deliverables
+Challenge No. 2
+Part 2 - Statement Parsing from Emails for Spend Insights
+Objective:
+Securely fetch, unlock (if needed), and parse PDF/HTML statements to surface spend insights.
+Core challenges:
+- OAuth-based email access
+-Password-protected PDFs: heuristic password discovery + user-prompt
+fallback
+-Transaction extraction, categorization (food, travel, EMI...), anomaly detection, rewards/interest summarization
+Features:
+-PDF/HTML parsing + OCR for scans
+-ML-driven categorization
+-Insight dashboard with visual spend breakdowns
+Points : 100
+50 Points for accessing & reading the Credit card email.
+20 Points for accessing the statement. (password protected)
+30 points for reading the statement.
+What You Can Use
+NLP/LLM libraries (spacy, BERT, GPT), TensorFlow Lite/Core ML, PyMuPDF/pikepdf,
+Gmail & Outlook APIs, Tesseract OCR, Flutter/React Native, privacy- preserving techniques,
+etc.
+Deliverables
+1. Working Demo (Required):
+-End-to-end prototype (mobile or web) showing:
+- SMS parsing → due-date dashboard & smart reminders
+- Email statement retrieval → password handling → insight dashboard
+2. Source code or repo link
+3. Technical write-up (architecture, model choices, privacy design) 4. Demo video (3-5 min) or live walkthrough during judging
