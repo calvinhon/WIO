@@ -28,13 +28,13 @@ Based on the problem statement, here is HAAC's curated list of **AI-based tools 
 
 #### 2. **PDF Parsing**
 
-* ✅ **PyMuPDF** / **PikePDF** — to open PDFs.
+* ✅ **PyMuPDF** — to open PDFs.
 * ✅ **Tesseract OCR** — for scanned/image-only PDFs.
 
 #### 3. **Password Handling**
-
-* ✅ **Heuristic passwords**: Try combinations of DOB, email, last 4 digits of card
-* ✅ **User prompt fallback** (via secure UI)
+* ✅ **PikePDF** — to open PDFs.
+* ✅ **Heuristic passwords** - try combinations of DOB, email, last 4 digits of card
+* ✅ **User prompt fallback** - (via secure UI)
 
 #### 4. **Categorization + Spend Analysis**
 
