@@ -28,7 +28,7 @@ Based on the problem statement, here is HAAC's curated list of **AI-based tools 
 
 #### 2. **PDF Parsing**
 
-* ✅ **PyMuPDF** — to open PDFs.
+* ✅ **PyMuPDF** — to parse PDFs.
 * ✅ **Tesseract OCR** — for scanned/image-only PDFs.
 
 #### 3. **Password Handling**
