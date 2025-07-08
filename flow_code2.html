@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPay Assistant - Complete Flow Implementations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .tab.active {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .platform-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .platform-title {
+            font-size: 2em;
+            color: #4a5568;
+            margin-bottom: 20px;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .flow-step {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .flow-step:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .step-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .node-config {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            position: relative;
+        }
+
+        .node-config h4 {
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .code-block {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .json-key {
+            color: #68d391;
+        }
+
+        .json-string {
+            color: #fbb6ce;
+        }
+
+        .json-number {
+            color: #90cdf4;
+        }
+
+        .json-boolean {
+            color: #f6ad55;
+        }
+
+        .connection-arrow {
+            text-align: center;
+            font-size: 1.5em;
+            color: #667eea;
+            margin: 15px 0;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .feature-card h4 {
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .feature-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-card li {
+            padding: 5px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .feature-card li:before {
+            content: "✓";
+            color: #48bb78;
+            margin-right: 10px;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+
+        .copy-button:hover {
+            background: #5a67d8;
+        }
+
+        .deployment-section {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .deployment-section h3 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .deployment-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .deployment-step {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .platform-section {
+                padding: 20px;
+            }
+            
+            .step-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 SmartPay Assistant</h1>
+            <p>Complete Flow Implementations for n8n & app.on-demand.io</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('n8n')">n8n Implementation</div>
+            <div class="tab" onclick="showTab('ondemand')">app.on-demand.io Implementation</div>
+            <div class="tab" onclick="showTab('comparison')">Platform Comparison</div>
+        </div>
+
+        <!-- n8n Implementation -->
+        <div id="n8n" class="tab-content active">
+            <div class="platform-section">
+                <div class="platform-title">🔄 n8n Workflow Implementation</div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Gmail Trigger Setup</div>
+                    </div>
+                    <div class="node-config">
+                        <h4>Gmail Trigger Node Configuration</h4>
+                        <div class="code-block">
+<span class="json-key">{</span>
+  <span class="json-key">"pollTimes"</span>: <span class="json-string">"triggerInterval"</span>,
+  <span class="json-key">"triggerInterval"</span>: <span class="json-number">5</span>,
+  <span class="json-key">"simple"</span>: <span class="json-boolean">true</span>,
+  <span class="json-key">"filters"</span>: <span class="json-key">{</span>
+    <span class="json-key">"q"</span>: <span class="json-string">"from:(bill payment due statement) OR subject:(payment due bill statement)"</span>,
+    <span class="json-key">"labelIds"</span>: <span class="json-key">["INBOX"]</span>
+  <span class="json-key">}</span>
+<span class="json-key">}</span>
+                        </div>
+                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                    </div>
+                </div>
+
+                <div class="connection-arrow">⬇️</div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Email Parser Function</div>
+                    </div>
+                    <div class="node-config">
+                        <h4>Function Node - Email Parser</h4>
+                        <div class="code-block">
+<span class="json-key">// Email Parser Function</span>
+<span class="json-key">function</span> parseEmailContent() {
+  <span class="json-key">const</span> emailBody = $json.snippet || $json.body;
+  <span class="json-key">const</span> subject = $json.subject;
+  <span class="json-key">const</span> sender = $json.sender;
+  
+  <span class="json-key">// Regex patterns for payment extraction</span>
+  <span class="json-key">const</span> patterns = {
+    amount: <span class="json-string">/[\$£€]\s*(\d+(?:,\d{3})*(?:\.\d{2})?)/gi</span>,
+    dueDate: <span class="json-string">/due\s+(?:on\s+)?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/gi</span>,
+    account: <span class="json-string">/account\s+(?:ending\s+)?(\d{4})/gi</span>,
+    company: <span class="json-string">/from:\s*([^<]+)/gi</span>
+  };
+  
+  <span class="json-key">const</span> extracted = {};
+  
+  <span class="json-key">for</span> (<span class="json-key">const</span> [key, pattern] <span class="json-key">of</span> Object.entries(patterns)) {
+    <span class="json-key">const</span> match = emailBody.match(pattern);
+    <span class="json-key">if</span> (match) {
+      extracted[key] = match[<span class="json-number">0</span>].replace(pattern, <span class="json-string">'$1'</span>);
+    }
+  }
+  
+  <span class="json-key">return</span> {
+    originalEmail: $json,
+    parsedData: {
+      amount: extracted.amount,
+      dueDate: extracted.dueDate,
+      account: extracted.account,
+      company: sender.split(<span class="json-string">'<'</span>)[<span class="json-number">0</span>].trim(),
+      billType: <span class="json-string">'email'</span>,
+      source: <span class="json-string">'gmail'</span>,
+      rawContent: emailBody.substring(<span class="json-number">0</span>, <span class="json-number">200</span>)
+    }
+  };
+}
+
+<span class="json-key">return</span> parseEmailContent();
+                        </div>
+                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                    </div>
+                </div>
+
+                <div class="connection-arrow">⬇️</div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <div class="step-title">OpenAI Enhancement</div>
+                    </div>
+                    <div class="node-config">
+                        <h4>HTTP Request Node - OpenAI API</h4>
+                        <div class="code-block">
+<span class="json-key">{</span>
+  <span class="json-key">"method"</span>: <span class="json-string">"POST"</span>,
+  <span class="json-key">"url"</span>: <span class="json-string">"https://api.openai.com/v1/chat/completions"</span>,
+  <span class="json-key">"headers"</span>: <span class="json-key">{</span>
+    <span class="json-key">"Authorization"</span>: <span class="json-string">"Bearer {{$env.OPENAI_API_KEY}}"</span>,
+    <span class="json-key">"Content-Type"</span>: <span class="json-string">"application/json"</span>
+  <span class="json-key">}</span>,
+  <span class="json-key">"body"</span>: <span class="json-key">{</span>
+    <span class="json-key">"model"</span>: <span class="json-string">"gpt-3.5-turbo"</span>,
+    <span class="json-key">"messages"</span>: <span class="json-key">[{</span>
+      <span class="json-key">"role"</span>: <span class="json-string">"user"</span>,
+      <span class="json-key">"content"</span>: <span class="json-string">"Extract payment details from this email and return JSON with amount, due_date (MM/DD/YYYY), company, and bill_type: {{$json.parsedData.rawContent}}"</span>
+    <span class="json-key">}]</span>,
+    <span class="json-key">"max_tokens"</span>: <span class="json-number">150</span>
+  <span class="json-key">}</span>
+<span class="json-key">}</span>
+                        </div>
+                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                    </div>
+                </div>
+
+                <div class="connection-arrow">⬇️</div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Database Storage</div>
+                    </div>
+                    <div class="node-config">
+                        <h4>Postgres Node - Store Payment Data</h4>
+                        <div class="code-block">
+<span class="json-key">{</span>
+  <span class="json-key">"operation"</span>: <span class="json-string">"insert"</span>,
+  <span class="json-key">"schema"</span>: <span class="json-string">"public"</span>,
+  <span class="json-key">"table"</span>: <span class="json-string">"payments"</span>,
+  <span class="json-key">"columns"</span>: <span class="json-string">"amount,due_date,company,bill_type,account,source,raw_content,created_at"</span>,
+  <span class="json-key">"values"</span>: <span class="json-string">"{{$json.parsedData.amount}},{{$json.parsedData.dueDate}},{{$json.parsedData.company}},{{$json.parsedData.billType}},{{$json.parsedData.account}},{{$json.parsedData.source}},{{$json.parsedData.rawContent}},NOW()"</span>
+<span class="json-key">}</span>
+                        </div>
+                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                    </div>
+                </div>
+
+                <div class="connection-arrow">⬇️</div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">5</div>
+                        <div class="step-title">Daily Summary Trigger</div>
+                    </div>
+                    <div class="node-config">
+                        <h4>Cron Trigger Node - Daily Summary</h4>
+                        <div class="code-block">
+<span class="json-key">{</span>
+  <span class="json-key">"rule"</span>: <span class="json-key">{</span>
+    <span class="json-key">"hour"</span>: <span class="json-number">9</span>,
+    <span class="json-key">"minute"</span>: <span class="json-number">0</span>,
+    <span class="json-key">"dayOfWeek"</span>: <span class="json-string">"*"</span>,
+    <span class="json-key">"timezone"</span>: <span class="json-string">"UTC"</span>
+  <span class="json-key">}</span>
+<span class="json-key">}</span>
+                        </div>
+                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                    </div>
+                </div>
+
+                <div class="connection-arrow">⬇️</div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">6</div>
+                        <div class="step-title">Upcoming Payments Query</div>
+                    </div>
+                    <div class="node-config">
+                        <h4>Postgres Node - Get Upcoming Payments</h4>
+                        <div class="code-block">
+<span class="json-key">{</span>
+  <span class="json-key">"operation"</span>: <span class="json-string">"select"</span>,
+  <span class="json-key">"query"</span>: <span class="json-string">"SELECT *, (due_date - CURRENT_DATE) as days_left FROM payments WHERE due_date >= CURRENT_DATE AND due_date <= CURRENT_DATE + INTERVAL '30 days' ORDER BY due_date ASC"</span>
+<span class="json-key">}</span>
+                        </div>
+                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                    </div>
+                </div>
+
+                <div class="connection-arrow">⬇️</div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">7</div>
+                        <div class="step-title">Multi-Channel Notifications</div>
+                    </div>
+                    
+                    <div class="node-config">
+                        <h4>Telegram Node Configuration</h4>
+                        <div class="code-block">
+<span class="json-key">{</span>
+  <span class="json-key">"resource"</span>: <span class="json-string">"message"</span>,
+  <span class="json-key">"operation"</span>: <span class="json-string">"sendMessage"</span>,
+  <span class="json-key">"chatId"</span>: <span class="json-string">"{{$env.TELEGRAM_CHAT_ID}}"</span>,
+  <span class="json-key">"text"</span>: <span class="json-string">"🤖 *SmartPay Assistant*\n\n📊 *Payment Summary*\n{{$json.map(p => `• ${p.company}: $${p.amount} (${p.days_left} days left)`).join('\n')}}"</span>,
+  <span class="json-key">"parseMode"</span>: <span class="json-string">"Markdown"</span>
+<span class="json-key">}</span>
+                        </div>
+                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <div class="node-config">
+                        <h4>Discord Webhook Node Configuration</h4>
+                        <div class="code-block">
+<span class="json-key">{</span>
+  <span class="json-key">"method"</span>: <span class="json-string">"POST"</span>,
+  <span class="json-key">"url"</span>: <span class="json-string">"{{$env.DISCORD_WEBHOOK_URL}}"</span>,
+  <span class="json-key">"body"</span>: <span class="json-key">{</span>
+    <span class="json-key">"embeds"</span>: <span class="json-key">[{</span>
+      <span class="json-key">"title"</span>: <span class="json-string">"💰 SmartPay Assistant Report"</span>,
+      <span class="json-key">"color"</span>: <span class="json-number">0x00ff00</span>,
+      <span class="json-key">"fields"</span>: <span class="json-key">[{</span>
+        <span class="json-key">"name"</span>: <span class="json-string">"Upcoming Payments"</span>,
+        <span class="json-key">"value"</span>: <span class="json-string">"{{$json.map(p => `${p.company}: $${p.amount} (${p.days_left} days)`).join('\n')}}"</span>
+      <span class="json-key">}]</span>
+    <span class="json-key">}]</span>
+  <span class="json-key">}</span>
+<span class="json-key">}</span>
+                        </div>
+                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                    </div>
+                </div>
+
+                <div class="connection-arrow">⬇️</div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">8</div>
+                        <div class="step-title">Calendar Integration</div>
+                    </div>
+                    <div class="node-config">
+                        <h4>Google Calendar Node - Add Payment Reminders</h4>
+                        <div class="code-block">
+<span class="json-key">{</span>
+  <span class="json-key">"resource"</span>: <span class="json-string">"event"</span>,
+  <span class="json-key">"operation"</span>: <span class="json-string">"create"</span>,
+  <span class="json-key">"calendarId"</span>: <span class="json-string">"primary"</span>,
+  <span class="json-key">"summary"</span>: <span class="json-string">"Payment Due: {{$json.company}}"</span>,
+  <span class="json-key">"description"</span>: <span class="json-string">"Amount: ${{$json.amount}}\nAccount: {{$json.account}}\nDue Date: {{$json.due_date}}"</span>,
+  <span class="json-key">"start"</span>: <span class="json-key">{</span>
+    <span class="json-key">"date"</span>: <span class="json-string">"{{$json.due_date}}"</span>
+  <span class="json-key">}</span>,
+  <span class="json-key">"end"</span>: <span class="json-key">{</span>
+    <span class="json-key">"date"</span>: <span class="json-string">"{{$json.due_date}}"</span>
+  <span class="json-key">}</span>
+<span class="json-key">}</span>
+                        </div>
+                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                    </div>
+                </div>
+
+                <div class="deployment-section">
+                    <h3>🚀 n8n Deployment Steps</h3>
+                    <div class="deployment-steps">
+                        <div class="deployment-step">
+                            <h4>1. Environment Setup</h4>
+                            <p>• Install n8n locally or use n8n.cloud<br>
+                            • Configure environment variables<br>
+                            • Set up database connections</p>
+                        </div>
+                        <div class="deployment-step">
+                            <h4>2. API Credentials</h4>
+                            <p>• Gmail API credentials<br>
+                            • OpenAI API key<br>
+                            • Telegram bot token<br>
+                            • Discord webhook URL</p>
+                        </div>
+                        <div class="deployment-step">
+                            <h4>3. Database Setup</h4>
+                            <p>• Create PostgreSQL database<br>
+                            • Run table creation scripts<br>
+                            • Configure n8n database connection</p>
+                        </div>
+                        <div class="deployment-step">
+                            <h4>4. Workflow Import</h4>
+                            <p>• Import workflow JSON<br>
+                            • Configure all nodes<br>
+                            • Test each connection<br>
+                            • Activate workflow</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- app.on-demand.io Implementation -->
+        <div id="ondemand" class="tab-content">
+            <div class="platform-section">
+                <div class="platform-title">🧩 app.on-demand.io Implementation</div>
+
+                <div class="flow-step">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Smart Trigger Configuration</div>
+                    </div>
+                    <div class="node-config">
+                        <h4>Gmail Monitor Agent</h4>
+                        <div class="code-block">
+<span class="json-key">{</span>
+  <span class="json-key">"agent_type"</span>: <span class="json-string">"gmail_monitor"</span>,
+  <span class="json-key">"config"</span>: <span class="json-key">{</span>
+    <span class="json-key">"watch_labels"</span>: <span class="json-key">["INBOX"]</span>,
+    <span class="json-key">"filters"</span>: <span class="json-key">{</span>
+      <span class="json-key">"from_contains"</span>: <span class="json-key">["bill", "payment", "statement", "due"]</span>,
+      <span class="json-key">"subject_contains"</span>: <span class="json-key">["payment", "due", "bill", "statement"]</span>,
+      <span class="json-key">"exclude_promotional"</span>: <span class="json-boolean">true</span>
+    <span class="json-key">}</span>,
+    <span class="json-key">"polling_interval"</span>: <span class="json-number">300</span>
+  <span class="json-key">}</span>
+<span class="json-key">}</span>
+                        </div>
+                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <div class="node-config">
+                        <h4>SMS Alert Monitor</h4>
+                        <div class="code-block">
+<span class="json-key">{</span>
+  <span class="json-key">"agent_type"</span>: <span class="json-string">"sms_monitor"</span>,
+  <span class="json-key">"config"</span>: <span class="json-key">{</span>
+    <span class="json-key">"source_numbers"</span>: <span class="json-key">[</span>
+      <span class="json-string">"+1234567890"</span>, <span class="json-string">"HDFC"</span>, <span class="json-string">"ICICI"</span>
+    <span class="json-key">]</span>,
+    <span class="json-key">"keywords"</span>: <span class="json-key">["due", "payment", "bill", "minimum"]</span>,
+    <span class="json-key">"webhook_endpoint"</span>: <span class="json-string">"/webhook/sms"</span>
+  <span class="json-key">}</span>
+<span class="json-key">}</span>
+                        </div>
+                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                    </div>
+                </div>
