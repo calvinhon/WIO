@@ -1,4 +1,4 @@
-Architecture Design:
+# Architecture Design:
 
 1. On-device SMS parsing (no data leaves device)
 
@@ -7,7 +7,7 @@ Architecture Design:
 3. Cloud functions for heavy ML tasks (categorization/OCR)
 
 
-Tool Stack:
+# Tool Stack:
 
 Mobile: Flutter (cross-platform)
 
@@ -17,4 +17,4 @@ AI: spaCy (SMS), BERT (categorization), Tesseract (OCR)
 
 Security: AES-256 encryption, OAuth scopes
 
-![WorkFlow chart](docs/mermaid_20250708_4458eb.png)
+![WorkFlow chart](mermaid_20250708_4458eb.png)
