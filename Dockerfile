@@ -1,0 +1,40 @@
+FROM cirrusci/flutter:stable
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies including Python, pip, and Tesseract
+RUN apt-get update && apt-get install -y \
+    wget unzip openjdk-17-jdk \
+    sudo android-tools-adb \
+    python3 python3-pip \
+    tesseract-ocr \
+    libgl1 libglib2.0-0 \
+    --no-install-recommends && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create a shell entrypoint BEFORE switching to non-root user
+RUN echo '#!/bin/bash\nexec bash --rcfile <(echo "export PATH=$PATH")' > /usr/local/bin/start && chmod +x /usr/local/bin/start
+
+# Create non-root user and set working directory
+RUN useradd -ms /bin/bash developer
+
+# Set ownership of Flutter SDK and pub cache (critical for Flutter development)
+RUN chown -R developer:developer /sdks/flutter
+RUN chown -R developer:developer /opt/flutter/.pub-cache || true
+
+# Optionally set a password and sudo access
+RUN echo "developer:pass" | chpasswd
+RUN usermod -aG sudo developer
+
+# Switch to non-root user for final image
+USER developer
+WORKDIR /home/developer
+
+# Optional: Copy Python dependencies and install them
+COPY --chown=developer:developer flutterApp/python/requirements.txt ./python/requirements.txt
+RUN pip3 install --user -r ./python/requirements.txt
+
+# Entry point
+ENTRYPOINT ["/usr/local/bin/start"]
+CMD ["bash"]

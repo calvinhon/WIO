@@ -8,11 +8,13 @@ class WioApp extends StatelessWidget {
     return MaterialApp(
       title: 'WIO Style Credit Card Bills',
       theme: ThemeData(
-        primaryColor: Color(0xFF008080), // Teal dark
+        primaryColor: Color(0xFF6932F0), // WIO Purple
         scaffoldBackgroundColor: Colors.white,
         textTheme: TextTheme(
-          bodyText2: TextStyle(fontFamily: 'Roboto', fontSize: 14, color: Colors.black87),
-          headline6: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+          bodyText2: TextStyle(
+              fontFamily: 'Roboto', fontSize: 14, color: Color(0xFF1A1A1A)),
+          headline6: TextStyle(
+              fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
         ),
       ),
       home: BillTableScreen(),
@@ -56,7 +58,8 @@ class BillTableScreen extends StatelessWidget {
       body: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: DataTable(
-          headingRowColor: MaterialStateProperty.all(Color(0xFFE0F2F2)), // Light teal background for header
+          headingRowColor:
+              MaterialStateProperty.all(Color(0xFFF2F2F2)), // Light gray header
           columnSpacing: 30,
           columns: [
             DataColumn(label: Text('Bank', style: TextStyle(fontWeight: FontWeight.bold))),
@@ -71,8 +74,14 @@ class BillTableScreen extends StatelessWidget {
                   cells: [
                     DataCell(Text(bill['bank']!)),
                     DataCell(Text(bill['creditCard']!)),
-                    DataCell(Text(bill['totalDue']!, style: TextStyle(color: Colors.redAccent))),
-                    DataCell(Text(bill['minimumPayment']!, style: TextStyle(color: Colors.orange))),
+                    DataCell(Text(
+                      bill['totalDue']!,
+                      style: TextStyle(color: Color(0xFF6932F0), fontWeight: FontWeight.bold),
+                    )),
+                    DataCell(Text(
+                      bill['minimumPayment']!,
+                      style: TextStyle(color: Colors.orange),
+                    )),
                     DataCell(Text(bill['dueDate']!)),
                   ],
                 ),
