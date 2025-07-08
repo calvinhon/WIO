@@ -1,0 +1,13 @@
+name: wio_app
+description: A WIO style credit card bills Flutter app
+publish_to: "none"  # Prevent publishing on pub.dev
+
+environment:
+  sdk: ">=2.18.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
