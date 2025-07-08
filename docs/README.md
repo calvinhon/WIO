@@ -17,4 +17,4 @@ AI: spaCy (SMS), BERT (categorization), Tesseract (OCR)
 
 Security: AES-256 encryption, OAuth scopes
 
-![WorkFlow chart](docs/mermaid_20250708_4458eb.png)
+![WorkFlow chart](mermaid_20250708_4458eb.png)
