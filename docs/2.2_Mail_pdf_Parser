@@ -1,0 +1,198 @@
+To successfully complete **Challenge No. 2 – Email Credit Card Statement Parsing for Spend Insights**, you'll need to integrate **secure email access**, **PDF/HTML parsing**, and **ML-based categorization** into an intuitive mobile/web interface.
+
+---
+
+## ✅ Best Tools for Each Component
+
+| Task                             | Tool                                                                    | Why It's Best                                       |
+| -------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------- |
+| **Email Access (Gmail/Outlook)** | **Gmail API** / **Microsoft Graph API**                                 | Secure OAuth2 access, filter for credit card emails |
+| **PDF Parsing**                  | **PyMuPDF** / **PDFMiner**                                              | Fast, supports text, layout                         |
+| **Password Unlocking**           | **pikepdf** + **heuristic passwords** + fallback user prompt            | Handles common encryption                           |
+| **Scanned PDF OCR**              | **Tesseract OCR**                                                       | Recognizes text from scanned documents              |
+| **HTML Email Parsing**           | **BeautifulSoup** / **lxml**                                            | Parses email bodies if statements are inline HTML   |
+| **Categorization**               | **TinyBERT / DistilBERT + TFLite/CoreML** or **rule-based NLP (spaCy)** | Lightweight, works offline                          |
+| **Anomaly/Reward Detection**     | **scikit-learn**, **XGBoost**                                           | Rule-based or trainable models                      |
+| **Mobile UI**                    | **Flutter** or **React Native**                                         | Fast cross-platform app                             |
+| **Storage**                      | **SQLite**, **Room** (Android)                                          | Local storage for transactions                      |
+| **Dashboard Charts**             | **fl\_chart** (Flutter), **Victory Charts** (React Native)              | Beautiful graphs for spend analysis                 |
+
+---
+
+## 🛠️ Step-by-Step Implementation Plan
+
+---
+
+### 🟠 Step 1: Secure Email Access (OAuth2)
+
+#### Gmail (preferred)
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a project → Enable **Gmail API**
+3. Set up **OAuth consent screen** (internal for testing)
+4. Create **OAuth2 credentials** → download JSON
+5. Use `google-auth`, `google-api-python-client` in Python:
+
+```bash
+pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
+```
+
+#### Sample Code to Fetch Email:
+
+```python
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+
+SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+creds = flow.run_local_server(port=0)
+
+service = build('gmail', 'v1', credentials=creds)
+results = service.users().messages().list(userId='me', q="subject:(credit card) filename:pdf").execute()
+```
+
+---
+
+### 🟠 Step 2: Download PDF/HTML Statements
+
+Get PDF attachments:
+
+```python
+msg = service.users().messages().get(userId='me', id=msg_id).execute()
+parts = msg['payload']['parts']
+for part in parts:
+    if part['filename'].endswith('.pdf'):
+        data = part['body']['data']
+        file_data = base64.urlsafe_b64decode(data)
+        with open("statement.pdf", "wb") as f:
+            f.write(file_data)
+```
+
+---
+
+### 🟠 Step 3: Unlock Password-Protected PDFs
+
+```python
+import pikepdf
+
+try:
+    pdf = pikepdf.open("statement.pdf", password="1234")
+except pikepdf._qpdf.PasswordError:
+    # fallback: prompt user for password
+    password = input("Enter PDF password: ")
+    pdf = pikepdf.open("statement.pdf", password=password)
+
+pdf.save("unlocked.pdf")
+```
+
+Try common heuristics: `DOB`, `last4digits`, `email prefix`, etc.
+
+---
+
+### 🟠 Step 4: Parse Transactions (PDF or OCR)
+
+#### Text-based PDFs:
+
+```python
+import fitz  # PyMuPDF
+
+doc = fitz.open("unlocked.pdf")
+text = ""
+for page in doc:
+    text += page.get_text()
+```
+
+#### OCR for scanned PDFs:
+
+```python
+import pytesseract
+from pdf2image import convert_from_path
+
+images = convert_from_path("statement.pdf")
+for image in images:
+    print(pytesseract.image_to_string(image))
+```
+
+---
+
+### 🟠 Step 5: Extract & Categorize Transactions
+
+#### Rule-based NLP (spaCy or Regex)
+
+```python
+import re
+lines = text.split("\n")
+transactions = []
+for line in lines:
+    match = re.match(r"(\d{2}/\d{2})\s+(.+?)\s+(\d+\.\d{2})", line)
+    if match:
+        date, desc, amount = match.groups()
+        transactions.append((date, desc, float(amount)))
+```
+
+#### ML-based Categorization
+
+* Use a fine-tuned model on `description → category` (EMI, food, etc.)
+* Deploy via **TensorFlow Lite** or **Core ML**
+
+---
+
+### 🟠 Step 6: Detect Anomalies & Rewards
+
+Train a small ML model on past spend data:
+
+* Detect spikes, unusual merchant names, duplicate amounts
+* Categorize "Cashback", "Rewards earned", etc.
+
+---
+
+### 🟠 Step 7: Build Insight Dashboard
+
+Use **Flutter** or **React Native**:
+
+* Show:
+
+  * Spend breakdown by category (pie chart)
+  * Monthly trends (bar/line chart)
+  * Top merchants
+  * EMI summary / anomalies
+
+**Flutter Charts Example**:
+
+```dart
+PieChart(
+  PieChartData(sections: [
+    PieChartSectionData(value: 30, title: 'Food'),
+    PieChartSectionData(value: 20, title: 'Travel'),
+  ]),
+)
+```
+
+---
+
+## ✅ Final Deliverables
+
+| Deliverable                 | Notes                                                  |
+| --------------------------- | ------------------------------------------------------ |
+| **1. Working Demo**         | Show email parsing → password unlock → spend dashboard |
+| **2. Source Code**          | GitHub repo with instructions                          |
+| **3. Technical Write-up**   | Explain flow, security/privacy design, model logic     |
+| **4. Demo Video (3–5 min)** | Record from phone or emulator                          |
+
+---
+
+## 🔐 Privacy Tips
+
+* All PDF parsing and ML runs **on-device**.
+* Do not send any email or statement content to cloud unless user opts in.
+* Store passwords in encrypted local storage (or not at all).
+
+---
+
+Would you like:
+
+* A complete **starter repo** (Flutter + Gmail API + Python backend)?
+* Sample ML model for categorization?
+* Help with converting a PDF parser to mobile?
+
+Let me know — I can generate it for you.
