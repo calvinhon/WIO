@@ -1,1 +1,5 @@
 wio_venv/
+
+# Ignore Gmail API and tokens
+Credentials.json
+token.json
