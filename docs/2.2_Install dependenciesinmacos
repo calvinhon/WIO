@@ -1,0 +1,21 @@
+# 1. Create virtual environment
+python3 -m venv cc_parser_env
+
+# 2. Activate the virtual environment
+source cc_parser_env/bin/activate
+
+# 3. Install required packages
+pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
+pip install PyMuPDF pikepdf pytesseract pdf2image
+pip install pandas numpy scikit-learn transformers
+pip install spacy beautifulsoup4 lxml
+pip install flask flask-cors
+pip install plotly dash
+
+# 4. Download spaCy English model
+python -m spacy download en_core_web_sm
+
+
+brew install tesseract
+
+brew install poppler
