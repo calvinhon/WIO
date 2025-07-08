@@ -85,4 +85,8 @@ Based on the problem statement, here is HAAC's curated list of **AI-based tools 
 | **Dashboards**     | fl\_chart / Victory Charts                         |
 | **Privacy**        | Local TFLite models + Encrypted local DB           |
 
+---
+
+### 🔶 Workflow Chart
+
 ![WorkFlow chart](mermaid_20250708_4458eb.png)
