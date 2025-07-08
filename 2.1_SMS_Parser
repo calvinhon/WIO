@@ -1,0 +1,199 @@
+To implement **"on-device NLP to parse bank/issuer SMS messages"** with a focus on **due dates, amounts, and payment detection**, you’ll want a system that is:
+
+* ✅ Fully offline (privacy-preserving)
+* ✅ Fast and lightweight
+* ✅ Robust to various SMS formats
+* ✅ Easy to update/adapt to new formats
+
+---
+
+## ✅ Recommended Stack (Best Tools)
+
+| Task                          | Tool                                                                                                                                   | Why It's Best                       |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| **SMS Access (Android)**      | [Android SMS Retriever API](https://developer.android.com/guide/topics/ui/notifiers/notifications#sms-retrieve) or **ContentResolver** | Directly read SMS inbox             |
+| **NLP Engine (Lightweight)**  | **spaCy** (custom rules), **Regex**, or **TinyBERT via TFLite**                                                                        | Fast and on-device                  |
+| **Scheduler/Reminder Engine** | Android WorkManager / AlarmManager                                                                                                     | Local alerts & reminders            |
+| **Local Storage**             | SQLite or Room                                                                                                                         | Secure local data storage           |
+| **Optional AI Models**        | TinyBERT / DistilBERT + TFLite                                                                                                         | If ML is needed for unseen patterns |
+
+---
+
+## 🛠️ Step-by-Step Implementation Guide (Android/Flutter)
+
+### ✅ Part 1: Access SMS on Device
+
+#### **Option A: Android (Java/Kotlin)**
+
+Grant permission in `AndroidManifest.xml`:
+
+```xml
+<uses-permission android:name="android.permission.READ_SMS" />
+```
+
+Query SMS inbox:
+
+```java
+Uri uri = Uri.parse("content://sms/inbox");
+Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+```
+
+Loop through messages:
+
+```java
+while (cursor.moveToNext()) {
+    String body = cursor.getString(cursor.getColumnIndexOrThrow("body"));
+    // pass body to parser
+}
+```
+
+#### **Option B: Flutter**
+
+Use packages:
+
+```yaml
+sms_maintained: ^0.2.4
+permission_handler: ^10.2.0
+```
+
+Flutter SMS fetch example:
+
+```dart
+final SmsQuery query = SmsQuery();
+List<SmsMessage> messages = await query.getAllSms;
+```
+
+---
+
+### ✅ Part 2: Parse SMS Content with NLP
+
+#### **Approach 1: Regex + Keyword Matching (lightweight)**
+
+Example:
+
+```python
+import re
+text = "Your HDFC credit card bill of ₹5,300 is due on 10 July."
+
+amount = re.search(r'₹[\d,]+', text)
+due_date = re.search(r'due on (\d{1,2} \w+)', text)
+
+print("Amount:", amount.group())
+print("Due Date:", due_date.group(1))
+```
+
+#### **Approach 2: Rule-based spaCy (with patterns)**
+
+Install:
+
+```bash
+pip install spacy
+python -m spacy download en_core_web_sm
+```
+
+Use `Matcher`:
+
+```python
+from spacy.matcher import Matcher
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("Your HDFC credit card bill of ₹5,300 is due on 10 July.")
+
+matcher = Matcher(nlp.vocab)
+pattern = [{"TEXT": {"REGEX": "₹[0-9,]+"}}, {"LOWER": "is"}, {"LOWER": "due"}, {"LOWER": "on"}, {"IS_TITLE": True}, {"IS_DIGIT": False}]
+matcher.add("DUE", [pattern])
+matches = matcher(doc)
+```
+
+#### **Approach 3: On-device TinyBERT via TensorFlow Lite**
+
+Train/fine-tune on sample SMS using labels like:
+
+```json
+{
+  "text": "Your card ending 1234 has a due of ₹5000 on 12 July.",
+  "due_date": "12 July",
+  "amount": "₹5000",
+  "payment_confirmed": false
+}
+```
+
+Export and convert to TFLite:
+
+```bash
+transformers-cli convert --model TinyBERT --framework tensorflow
+```
+
+Deploy in Android using TensorFlow Lite interpreter.
+
+---
+
+### ✅ Part 3: Schedule Reminders Smartly
+
+Use **WorkManager** or **AlarmManager** on Android:
+
+```java
+AlarmManager alarmMgr = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+Intent intent = new Intent(context, AlarmReceiver.class);
+PendingIntent alarmIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+
+Calendar calendar = Calendar.getInstance();
+calendar.setTime(yourDueDate);
+calendar.add(Calendar.DATE, -1); // Remind 1 day before
+
+alarmMgr.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), alarmIntent);
+```
+
+---
+
+### ✅ Part 4: Smart Logic (Suppress Alert if Paid)
+
+Build rules:
+
+* If an SMS includes keywords like: `paid`, `payment received`, `Rs. X debited`, mark bill as paid
+* Only trigger alert if:
+
+  * Due date in future
+  * No payment message found after bill SMS
+
+You can use a **payment confirmation matcher**:
+
+```python
+if "paid" in sms_text.lower() or "payment received" in sms_text.lower():
+    mark_as_paid(card_number)
+```
+
+---
+
+### ✅ UI (Dashboard in Mobile App)
+
+Use **Flutter** or **Jetpack Compose** to build:
+
+* Card-wise dues
+* Highlight urgent payments
+* Status badges (Paid, Upcoming, Overdue)
+
+---
+
+## 📦 Final Deliverable Components:
+
+1. Mobile App (Android or Flutter)
+2. Local NLP SMS Parser (regex + optional TinyBERT)
+3. Local Notification Engine
+4. SQLite-backed storage
+5. Dashboard UI
+6. Documentation + Sample data + Video demo
+
+---
+
+### Need help?
+
+Would you like:
+
+* A full starter project in Flutter/Android Studio?
+* Sample fine-tuned BERT or regex patterns for SMS messages?
+* Pre-built UI components?
+
+Let me know — I can generate those next.
+
