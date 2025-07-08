@@ -1,6 +1,7 @@
 # Ignore Gmail API and tokens
 Credentials.json
 token.json
+*.json
 
 # Ignore environment variables
 .env
