@@ -1,4 +1,4 @@
-Based on your problem statement, here’s a curated list of **AI-based tools and frameworks** that can help you build a **privacy-preserving, smart, and responsive mobile app** for both SMS and email-based financial parsing.
+Based on the problem statement, here is HAAC's curated list of **AI-based tools and frameworks** to build a **privacy-preserving, smart, and responsive mobile app** for both SMS and email-based financial parsing and to notify users of pending due dates and associated payment amounts.
 
 ---
 
@@ -8,27 +8,18 @@ Based on your problem statement, here’s a curated list of **AI-based tools and
 
 * ✅ **spaCy (with custom patterns)** — fast, lightweight, easy to customize.
 * ✅ **HuggingFace Transformers (MiniLM / DistilBERT)** — supports fine-tuned LLMs on SMS-like text.
-* ✅ **TensorFlow Lite** or **ONNX Runtime Mobile** — for deploying models directly on Android/iOS.
 
-#### 2. **Smart Reminder Engine**
+#### 2. **Testing New SMS Formats**
 
-* ✅ **Rule-based Engine (Durable Rules or Pyknow)** — to define suppression and salary-based scheduling logic.
-* ✅ **Temporal.io / Firebase Functions** — schedule notifications or reminders.
-* ✅ **Local Android/iOS Notification API** — use platform-native schedulers for offline reminders.
+* ✅ **Few-shot prompting with open-sourced LLM** — to label a and b (due date, total) on SMS formats.
 
 #### 3. **Storage**
 
 * ✅ **SQLite or Room (Android)** — privacy-first local storage.
-* ✅ **Core Data (iOS)** — for structured reminders, past payments, etc.
-
-#### 4. **Testing New SMS Formats**
-
-* ✅ **Few-shot prompting with OpenAI GPT-4o (offline fine-tuning)** — to label a and b (due date, total) on SMS formats.
-* ✅ **Custom Regex + GPT fallback** — hybrid parsers for unseen messages.
 
 ---
 
-### 🔶 **Challenge 2: Email PDF/HTML Parsing for Spend Insights**
+### 🔶 **Challenge 2: Email PDF/HTML Parsing for Spend and Bill Payment Insights**
 
 #### 1. **Email Access (Gmail/Outlook)**
 
@@ -37,8 +28,7 @@ Based on your problem statement, here’s a curated list of **AI-based tools and
 
 #### 2. **PDF Parsing**
 
-* ✅ **PyMuPDF** or **PDFMiner** — for structured PDFs.
-* ✅ **pikepdf** — unlock password-protected PDFs.
+* ✅ **PyMuPDF** / **PikePDF** — to open PDFs.
 * ✅ **Tesseract OCR** — for scanned/image-only PDFs.
 
 #### 3. **Password Handling**
@@ -49,15 +39,12 @@ Based on your problem statement, here’s a curated list of **AI-based tools and
 #### 4. **Categorization + Spend Analysis**
 
 * ✅ **BERT or LLM fine-tuned on transaction types** — extract merchant, category, etc.
-* ✅ **scikit-learn / XGBoost** — for anomaly detection, trends.
-* ✅ **LlamaIndex or LangChain** — if building with LLMs in mind.
 
 ---
 
 ### 🔶 **Mobile App Frameworks**
 
-* ✅ **Flutter** — cross-platform UI, native-like performance, easy chart libraries.
-* ✅ **React Native** — ecosystem rich, easy integration with native modules (e.g., SMS read APIs, background jobs).
+* ✅ **Flutter** — cross-platform UI, native-like performance, built-in notifications for payments due, easy chart libraries.
 
 ---
 
@@ -66,7 +53,6 @@ Based on your problem statement, here’s a curated list of **AI-based tools and
 * ✅ **Chart libraries**:
 
   * **Flutter**: fl\_chart, syncfusion\_flutter\_charts
-  * **React Native**: Victory Charts, React Native Charts Wrapper
 
 * ✅ **Insight Engine**:
 
@@ -91,20 +77,12 @@ Based on your problem statement, here’s a curated list of **AI-based tools and
 
 | Part               | Tools                                              |
 | ------------------ | -------------------------------------------------- |
-| **SMS Parsing**    | spaCy / MiniLM + Regex + SQLite + Android SMS APIs |
-| **Email Parsing**  | Gmail API + PyMuPDF/pikepdf + BERT + Scikit-learn  |
-| **PDF Unlocking**  | pikepdf + password heuristics                      |
-| **Categorization** | TinyBERT / TF-IDF + Logistic Regression            |
-| **Mobile App**     | Flutter or React Native                            |
+| **SMS Parsing**    | spaCy / MiniLM + DistilBERT                        |
+| **Email Parsing**  | Gmail API + PyMuPDF + BERT + Scikit-learn          |
+| **PDF Unlocking**  | PikePDF + password heuristics                      |
+| **Categorization** | TinyBERT                                           |
+| **Mobile App**     | Flutter                                            |
 | **Dashboards**     | fl\_chart / Victory Charts                         |
 | **Privacy**        | Local TFLite models + Encrypted local DB           |
 
----
-
-Let me know if you want:
-
-* Sample architecture diagram
-* Code templates for SMS/email parsers
-* Help fine-tuning BERT for transaction categorization
-
-Would you like to focus more on the mobile frontend next or the backend logic?
+![WorkFlow chart](docs/mermaid_20250708_4458eb.png)
