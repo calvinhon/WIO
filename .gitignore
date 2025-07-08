@@ -1,5 +1,15 @@
-wio_venv/
-
 # Ignore Gmail API and tokens
 Credentials.json
 token.json
+
+# Ignore environment variables
+.env
+
+# Ignore compiled Python files and virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env/
+venv/
+wio_venv/
