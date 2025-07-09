@@ -200,7 +200,7 @@ class CreditCardExtractorDB:
             print("🤖 Initializing NER model...", file=sys.stderr)
             
             # Load BERT-NER model for entity extraction
-            self.ner_model = pipeline(
+            self.ner_model = pipeline(  # type: ignore
                 "ner",
                 model="dslim/bert-base-NER",
                 aggregation_strategy="simple",
@@ -815,6 +815,85 @@ class CreditCardExtractorDB:
         except Exception as e:
             print(f"Error in payment analysis: {e}", file=sys.stderr)
 
+    # Print all database data in JSON format
+    def print_database_json(self):
+        """Print all cards and payments data in JSON format"""
+        try:
+            conn = self.connect_db()
+            cursor = conn.cursor()
+            
+            # Get all cards data
+            cursor.execute("""
+                SELECT 
+                    card_id,
+                    latest_due_date,
+                    latest_total_amount,
+                    latest_min_amount,
+                    total_payments_made,
+                    created_at,
+                    updated_at
+                FROM cards
+                ORDER BY card_id
+            """)
+            
+            cards_data = []
+            for row in cursor.fetchall():
+                card_data = {
+                    "card_id": row[0],
+                    "latest_due_date": row[1],
+                    "latest_total_amount": row[2],
+                    "latest_min_amount": row[3],
+                    "total_payments_made": row[4],
+                    "created_at": row[5],
+                    "updated_at": row[6]
+                }
+                cards_data.append(card_data)
+            
+            # Get all payments data
+            cursor.execute("""
+                SELECT 
+                    payment_id,
+                    card_id,
+                    amount,
+                    payment_date,
+                    description,
+                    created_at
+                FROM payments
+                ORDER BY card_id, payment_date DESC
+            """)
+            
+            payments_data = []
+            for row in cursor.fetchall():
+                payment_data = {
+                    "payment_id": row[0],
+                    "card_id": row[1],
+                    "amount": row[2],
+                    "payment_date": row[3],
+                    "description": row[4],
+                    "created_at": row[5]
+                }
+                payments_data.append(payment_data)
+            
+            # Combine all data
+            database_data = {
+                "cards": cards_data,
+                "payments": payments_data,
+                "summary": {
+                    "total_cards": len(cards_data),
+                    "total_payments": len(payments_data),
+                    "total_due_amount": sum(card.get("latest_total_amount", 0) or 0 for card in cards_data),
+                    "total_paid_amount": sum(card.get("total_payments_made", 0) or 0 for card in cards_data)
+                }
+            }
+            
+            # Print JSON data
+            print(json.dumps(database_data, indent=2, ensure_ascii=False))
+            
+            conn.close()
+            
+        except Exception as e:
+            print(f"Error printing database JSON: {e}", file=sys.stderr)
+
     # Main execution function
     def run(self, sms_table_name: str = "messages"):
         try:
@@ -851,6 +930,9 @@ class CreditCardExtractorDB:
             
             # Run payment analysis
             self.analyze_payments_detailed()
+            
+            # Print all database data in JSON format
+            self.print_database_json()
             
             # Push updated database back to Android device
             if self.auto_sync:
