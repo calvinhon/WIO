@@ -500,17 +500,10 @@ class CreditCardExtractorDB:
         """Extract card numbers using hybrid NER + regex approach"""
         card_numbers = set()
         
-        # Step 1: Check if text contains financial keywords
-        text_lower = text.lower()
-        is_financial = any(keyword in text_lower for keyword in self.financial_keywords)
-        
-        if not is_financial:
-            return set()
-        
-        # Step 2: Extract using regex patterns
+        # Step 1: Always start with regex extraction (don't pre-filter)
         regex_cards = self.extract_card_numbers_regex(text)
         
-        # Step 3: If NER model is available, use it for validation
+        # Step 2: If NER model is available, use it for additional validation
         if self.ner_model:
             try:
                 # Get entities from text
@@ -527,12 +520,12 @@ class CreditCardExtractorDB:
                         'end': entity['end']
                     })
                 
-                # Validate regex-found cards with NER context
+                # Validate regex-found cards with NER context (lowered threshold)
                 for card_num in regex_cards:
                     # Calculate confidence score for this card
                     confidence = self._calculate_card_confidence(card_num, text, entity_texts)
                     
-                    if confidence > 0.5:  # Confidence threshold
+                    if confidence > 0.2:  # Lowered confidence threshold
                         card_numbers.add(card_num)
                 
                 # Also check if any entities are 4-digit numbers
@@ -550,6 +543,14 @@ class CreditCardExtractorDB:
                             if any(kw in context for kw in ['card', 'ending', 'credit', 'debit']):
                                 card_numbers.add(cleaned)
                 
+                # If no cards found with NER validation, fallback to regex results
+                if not card_numbers and regex_cards:
+                    # Check if text contains basic financial keywords
+                    text_lower = text.lower()
+                    is_financial = any(keyword in text_lower for keyword in self.financial_keywords)
+                    if is_financial:
+                        card_numbers = regex_cards
+                
             except Exception as e:
                 print(f"Error using NER model: {e}", file=sys.stderr)
                 # Fall back to regex results
@@ -562,7 +563,7 @@ class CreditCardExtractorDB:
     
     def _calculate_card_confidence(self, card_num: str, text: str, entities: List[Dict]) -> float:
         """Calculate confidence score for a card number based on context"""
-        confidence = 0.5  # Base confidence
+        confidence = 0.3  # Lower base confidence
         
         # Find where this card number appears
         for match in re.finditer(rf'\b{card_num}\b', text):
@@ -571,22 +572,25 @@ class CreditCardExtractorDB:
             context_end = min(len(text), match.end() + 100)
             context = text[context_start:context_end].lower()
             
-            # Strong indicators
+            # Strong indicators (increased boost)
             if 'card ending' in context:
-                confidence += 0.3
+                confidence += 0.4
             elif 'ending with' in context:
-                confidence += 0.25
+                confidence += 0.35
             elif any(pattern in context for pattern in ['xxx', '****']):
-                confidence += 0.2
+                confidence += 0.3
             
-            # Supporting keywords
+            # Supporting keywords (increased boost)
             keyword_boost = {
-                'credit card': 0.15,
-                'debit card': 0.15,
-                'payment': 0.1,
-                'transaction': 0.1,
+                'credit card': 0.2,
+                'debit card': 0.2,
+                'payment': 0.15,
+                'transaction': 0.15,
                 'approved': 0.1,
-                'bank': 0.05
+                'bank': 0.1,
+                'aed': 0.1,  # Currency indicator
+                'billing': 0.1,
+                'statement': 0.1
             }
             
             for keyword, boost in keyword_boost.items():
