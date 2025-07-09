@@ -1,0 +1,211 @@
+
+[Page 1 - Extracted Text]
+Here's the information you can use to create your hypothetical ADCB Credit Card bill: 
+ADCB (Abu Dhabi Commercial Bank) 
+P.O. Box 939, Abu Dhabi, UAE Customer Service: 600 50 2030 (Within UAE) | +971 2 
+6210090 (Outside UAE) Website: www.adcb.com 
+Credit Card Statement 
+ 
+Cardholder Information 
+●​ Name: Mr. Alex Johnson 
+●​ Address: Apartment 101, Building C, Al Reem Island, Abu Dhabi, UAE 
+●​ Contact Number: +971 50 123 4567 
+●​ Email: alex.johnson@example.com
+[Page 1 - OCR Text]
+Here's the information you can use to create your hypothetical ADCB Credit Card bill:
+
+ADCB (Abu Dhabi Commercial Bank)
+
+P.O. Box 939, Abu Dhabi, UAE Customer Service: 600 50 2030 (Within UAE) | +971 2
+6210090 (Outside UAE) Website: www.adcb.com
+
+Credit Card Statement
+
+Statement Date: 08 July 2025
+
+Payment Due Date: 29 July 2025
+
+Statement Period: 09 June 2025 - 08 July 2025
+
+Card Type: ADCB TouchPoints Platinum Credit Card
+Card Number (last 4 digits): XXXX XXXX XXXX 1234
+Account Number: 001-123456-001
+
+Cardholder Information
+
+Name: Mr. Alex Johnson
+
+Address: Apartment 101, Building C, Al Reem Island, Abu Dhabi, UAE
+Contact Number: +971 50 123 4567
+
+Email: alex.johnson@example.com
+
+[Page 2 - Extracted Text]
+Transaction Details
+[Page 2 - OCR Text]
+Account Summary
+
+Description
+
+Previous Balance
+
+Payments Received
+
+Purchases & Cash
+Advances
+
+Interest Charges
+
+Fees
+
+New Balance
+
+Minimum Amount Due
+
+Available Credit Limit
+
+Credit Limit
+
+Transaction Details
+
+Amount (AED)
+
+1,500.00
+
+(1,500.00)
+
+1,250.00
+
+25.00
+
+1,275.00
+
+63.75
+
+8,725.00
+
+10,000.00
+
+[Page 3 - Extracted Text]
+Date 
+Transaction Description 
+Amount (AED) 
+10 Jun 2025 
+Spinneys Supermarket, Abu Dhabi 120.00 
+15 Jun 2025 
+Amazon.ae (Online Purchase) 
+350.00 
+18 Jun 2025 
+Noon.com (Online Purchase) 
+280.00 
+22 Jun 2025 
+Starbucks Coffee, Abu Dhabi 
+35.00 
+25 Jun 2025 
+ADNOC Service Station, Abu 
+Dhabi 
+100.00 
+01 Jul 2025 
+Carrefour Hypermarket, Abu Dhabi 240.00 
+05 Jul 2025 
+Local Restaurant, Abu Dhabi 
+105.00 
+Total 
+Purchases 
+ 
+1,230.00 
+01 Jul 2025 
+Annual Fee 
+25.00 
+Total Fees 
+ 
+25.00 
+Export to Sheets 
+Reward Points Summary (e.g., TouchPoints)
+[Page 3 - OCR Text]
+Date Transaction Description
+
+10 Jun 2025 Spinneys Supermarket, Abu Dhabi
+
+15 Jun 2025 Amazon.ae (Online Purchase)
+
+18 Jun 2025 Noon.com (Online Purchase)
+
+22 Jun 2025 Starbucks Coffee, Abu Dhabi
+
+25 Jun 2025 ADNOC Service Station, Abu
+
+Dhabi
+01 Jul 2025 Carrefour Hypermarket, Abu Dhabi
+05 Jul 2025 Local Restaurant, Abu Dhabi
+Total
+Purchases
+01 Jul 2025 Annual Fee
+Total Fees
+
+Export to Sheets
+
+Reward Points Summary (e.g., TouchPoints)
+
+Amount (AED)
+
+120.00
+
+350.00
+
+280.00
+
+35.00
+
+100.00
+
+240.00
+
+105.00
+
+1,230.00
+
+25.00
+
+25.00
+
+[Page 4 - Extracted Text]
+●​ Previous Points Balance: 5,200 
+●​ Points Earned This Cycle: 250 
+●​ Points Redeemed This Cycle: 0 
+●​ Current Points Balance: 5,450 
+Payment Options 
+●​ ADCB Personal Internet Banking: Log in to your account at www.adcb.com 
+●​ ADCB Mobile Banking App: Download from the App Store or Google Play 
+●​ ADCB Branches: Visit any ADCB branch or ATM 
+●​ ADCB Phone Banking: Call 600 50 2030 
+●​ Exchanges: Al Ansari Exchange, UAE Exchange, etc. 
+Important Information 
+●​ Please pay your Minimum Amount Due (or New Balance) by the Payment Due Date 
+to avoid late payment charges and interest. 
+●​ Making only the Minimum Amount Due payment will result in interest charges on 
+your outstanding balance. 
+●​ For any queries regarding your statement, please contact our Customer Service. 
+●​ Terms and Conditions apply. Please refer to www.adcb.com for details.
+[Page 4 - OCR Text]
+e Previous Points Balance: 5,200
+e Points Earned This Cycle: 250
+e Points Redeemed This Cycle: 0
+e Current Points Balance: 5,450
+Payment Options
+e ADCB Personal Internet Banking: Log in to your account at www.adcb.com
+e ADCB Mobile Banking App: Download from the App Store or Google Play
+e ADCB Branches: Visit any ADCB branch or ATM
+e ADCB Phone Banking: Call 600 50 2030
+e Exchanges: Al Ansari Exchange, UAE Exchange, etc.
+
+Important Information
+
+Please pay your Minimum Amount Due (or New Balance) by the Payment Due Date
+to avoid late payment charges and interest.
+
+Making only the Minimum Amount Due payment will result in interest charges on
+your outstanding balance.
+
+For any queries regarding your statement, please contact our Customer Service.
+Terms and Conditions apply. Please refer to www.adcb.com for details.

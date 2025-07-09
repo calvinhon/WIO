@@ -8,10 +8,14 @@ RUN apt-get update && apt-get install -y \
     sudo android-tools-adb \
     python3 python3-pip \
     tesseract-ocr \
+	usbutils \
     libgl1 libglib2.0-0 \
     --no-install-recommends && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# Install Ollama inside container
+RUN curl -fsSL https://ollama.com/install.sh | sh
 
 # Create a shell entrypoint BEFORE switching to non-root user
 RUN echo '#!/bin/bash\nexec bash --rcfile <(echo "export PATH=$PATH")' > /usr/local/bin/start && chmod +x /usr/local/bin/start
@@ -23,16 +27,24 @@ RUN useradd -ms /bin/bash developer
 RUN chown -R developer:developer /sdks/flutter
 RUN chown -R developer:developer /opt/flutter/.pub-cache || true
 
-# Optionally set a password and sudo access
+# Set a password and sudo access
 RUN echo "developer:pass" | chpasswd
 RUN usermod -aG sudo developer
+
+# Change permissions on the Android SDK
+USER root
+
+RUN chmod -R a+rwX /opt/android-sdk-linux \
+ && yes | sdkmanager "build-tools;30.0.3" "platform-tools" "platforms;android-33"
+
+USER developer
 
 # Switch to non-root user for final image
 USER developer
 WORKDIR /home/developer
 
 # Optional: Copy Python dependencies and install them
-COPY --chown=developer:developer flutterApp/python/requirements.txt ./python/requirements.txt
+COPY --chown=developer:developer flutter_app_new/python/requirements.txt ./python/requirements.txt
 RUN pip3 install --user -r ./python/requirements.txt
 
 # Entry point
