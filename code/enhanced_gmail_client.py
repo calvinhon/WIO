@@ -317,12 +317,13 @@ class EnhancedGmailClient:
                 os.makedirs(download_dir)
             
             downloaded_files = []
-            
+
             def process_parts(parts):
                 for part in parts:
                     if part.get('filename'):
                         filename = part['filename']
-                        if filename.lower().endswith('.pdf'):
+                        # Download PDF and HTML attachments
+                        if filename.lower().endswith('.pdf') or filename.lower().endswith('.html'):
                             attachment_id = part['body'].get('attachmentId')
                             if attachment_id:
                                 try:

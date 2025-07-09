@@ -348,8 +348,13 @@ class OutlookClient:
 			downloaded_files = []
 
 			for attachment in attachments:
-				if (attachment.get('contentType') == 'application/pdf' or 
-					attachment.get('name', '').lower().endswith('.pdf')):
+				content_type = attachment.get('contentType', '').lower()
+				name = attachment.get('name', '').lower()
+				if (
+					content_type in ['application/pdf', 'text/html'] or
+					name.endswith('.pdf') or
+					name.endswith('.html')
+				):
 
 					try:
 						# Get attachment content
