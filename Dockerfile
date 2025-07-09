@@ -49,7 +49,7 @@ USER developer
 WORKDIR /home/developer
 
 # Copy Python dependencies and install them
-COPY --chown=developer:developer flutter_app_new/python/requirements.txt ./python/requirements.txt
+COPY --chown=developer:developer email/python/requirements.txt ./python/requirements.txt
 RUN pip3 install --user -r ./python/requirements.txt
 
 # Entry point
