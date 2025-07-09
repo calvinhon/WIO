@@ -267,7 +267,7 @@ class OutlookClient:
 			date_filter = past_date.strftime('%Y-%m-%dT%H:%M:%SZ')
 
 			# Step 2: Bank-related keywords
-			keywords = ["statement", "account", "credit card", "bank", "e-statement"]
+			keywords = ["credit card"]
 
 			# Step 3: Previously processed IDs
 			conn = sqlite3.connect(self.db_path)
@@ -339,7 +339,7 @@ class OutlookClient:
 
 		return message.get('bodyPreview', '')
 
-	def download_attachments(self, message_id: str, attachments: List[dict], download_dir: str = 'downloads') -> List[str]:
+	def download_attachments(self, message_id: str, attachments: List[dict], download_dir: str = 'assets') -> List[str]:
 		"""Download PDF attachments from email"""
 		try:
 			if not os.path.exists(download_dir):
@@ -348,8 +348,11 @@ class OutlookClient:
 			downloaded_files = []
 
 			for attachment in attachments:
-				if (attachment.get('contentType') == 'application/pdf' or 
-					attachment.get('name', '').lower().endswith('.pdf')):
+				if (
+					attachment.get('contentType') in ['application/pdf', 'text/html'] or
+					attachment.get('name', '').lower().endswith('.pdf') or
+					attachment.get('name', '').lower().endswith('.html')
+				):
 
 					try:
 						# Get attachment content

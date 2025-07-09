@@ -14,6 +14,7 @@ from enhanced_gmail_client import EnhancedGmailClient
 from personal_data_manager import PersonalDataManager
 from unified_email_client import UnifiedEmailClient
 from outlook_client import OutlookClient, OutlookConfig
+import subprocess
 
 def display_email_stats(db_path='email_data.db'):
     """Display statistics about processed emails"""
@@ -621,6 +622,14 @@ def process_gmail_only():
         print(f"  With attachments: {stats.get('emails_with_attachments', 0)}")
         print(f"  Recent (7 days): {stats.get('recent_emails', 0)}")
         
+        # After processing and saving attachments to assets folder, extract text:
+        print("\n📝 Extracting text from new files in assets folder...")
+        subprocess.run(
+            ["python3", "extract_text.py", "assets"],
+            check=True
+        )
+        print("✅ Text extraction complete. See assets/output for results.")
+        
     except Exception as e:
         print(f"❌ Error processing Gmail: {e}")
         logger.error(f"Gmail processing error: {e}")
@@ -675,8 +684,13 @@ def process_outlook_direct():
         else:
             print("ℹ️ No new emails found to process")
         
-        print(f"\n📊 Outlook Statistics:")
-        print(f"  Total emails processed this session: {processed_count}")
+        # After processing and saving attachments to assets folder, extract text:
+        print("\n📝 Extracting text from new files in assets folder...")
+        subprocess.run(
+            ["python3", "extract_text.py", "assets"],
+            check=True
+        )
+        print("✅ Text extraction complete. See assets/output for results.")
         
     except Exception as e:
         print(f"❌ Error in direct Outlook processing: {e}")

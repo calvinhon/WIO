@@ -211,7 +211,7 @@ class EnhancedGmailClient:
             date_str = past_date.strftime('%Y/%m/%d')
             
             # Bank-related keywords
-            keywords = ["statement", "account", "credit card", "bank", "e-statement"]
+            keywords = ["credit card"]
             keyword_query = " OR ".join([f'"{kw}"' for kw in keywords])
             
             # Build Gmail search query
@@ -310,7 +310,7 @@ class EnhancedGmailClient:
             logger.error(f"Failed to extract email body: {e}")
             return message.get('snippet', '')
     
-    def download_attachments(self, message_id: str, message: dict, download_dir: str = 'downloads') -> List[str]:
+    def download_attachments(self, message_id: str, message: dict, download_dir: str = 'assets') -> List[str]:
         """Download PDF attachments from Gmail message"""
         try:
             if not os.path.exists(download_dir):
@@ -322,7 +322,7 @@ class EnhancedGmailClient:
                 for part in parts:
                     if part.get('filename'):
                         filename = part['filename']
-                        if filename.lower().endswith('.pdf'):
+                        if filename.lower().endswith('.pdf') or filename.lower().endswith('.html'):
                             attachment_id = part['body'].get('attachmentId')
                             if attachment_id:
                                 try:
@@ -943,7 +943,7 @@ if __name__ == "__main__":
         
 #    #    return list(set(hints)), list(set(rules))
 
-#    def download_pdf_attachments(self, msg_id, payload, download_dir='downloads'):
+#    def download_pdf_attachments(self, msg_id, payload, download_dir='assets'):
 #        if not os.path.exists(download_dir):
 #            os.makedirs(download_dir)
 #        downloaded_files = []

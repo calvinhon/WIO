@@ -9,5 +9,5 @@ Please follow the instructions below to open your e-statement:
 1.	Click on the attachment provided with this mail.
 2.	You will be prompted to enter your 8-digit password.
 3.	Your password is:
-Your year of birth, followed by the first four digits of your registered mobile number. For example, if your year of birth is 1980 and your mobile number is 050 123 4567, then your password will be 19800501.
+Your year of birth, followed by the last four digits of your registered mobile number. For example, if your year of birth is 1980 and your mobile number is 050 123 4567, then your password will be 19804567.
 You can also view your e-statement, transaction history and card details on the FAB Mobile app.

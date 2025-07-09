@@ -27,7 +27,7 @@ d:\H\42AD\WIO\code/
 │   ├── credentials.json          # 🔑 Google API credentials (you need to add this)
 │   ├── token.json                # 🎟️ OAuth token (auto-generated)
 │   ├── email_data.db             # 💾 SQLite database (auto-created)
-│   └── downloads/                # 📄 Downloaded PDF files
+│   └── assets/                # 📄 Downloaded PDF files
 │
 └── 📖 Documentation
     └── read.md                   # 📚 Detailed documentation
@@ -41,7 +41,7 @@ Gmail API → Enhanced Gmail Client → Email Processing → Password Generation
      ↓              ↓                    ↓                  ↓              ↓
   Auth Token    Email Metadata    Password Rules    LLM/Rule-based    Unlocked PDFs
      ↓              ↓                    ↓            Generation           ↓
-  token.json    email_data.db      Pattern Matching      ↓           downloads/
+  token.json    email_data.db      Pattern Matching      ↓           assets/
                      ↓                    ↓          Password DB
                Personal Data       Rule Extraction        ↓
                      ↓                    ↓         Success/Failure
@@ -190,7 +190,7 @@ python enhanced_gmail_client.py
 - Custom password hints
 
 ### Downloaded Files
-- PDFs saved in `downloads/` directory
+- PDFs saved in `assets/` directory
 - Original names preserved
 - Unlocked versions created
 
