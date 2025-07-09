@@ -1,1 +1,25 @@
+# Ignore Gmail API and tokens
+# Secrets and credentials
+code/token.json
+code/Credentials.json
+code/email_data.db
+credentials.json
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.env
+.env.*
+
+# Ignore environment variables
+.env
+
+# Ignore compiled Python files and virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env/
 venv/
+wio_venv/

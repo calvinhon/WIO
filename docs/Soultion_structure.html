@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Financial Parsing App - System Architecture</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.2em;
+            margin: 0;
+        }
+        
+        .flowchart {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+        
+        .input-sources {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .block {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .block:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        
+        .block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .block:hover::before {
+            left: 100%;
+        }
+        
+        .block h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.2em;
+        }
+        
+        .block p {
+            margin: 0;
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .sms-block {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            width: 200px;
+        }
+        
+        .email-block {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            width: 200px;
+        }
+        
+        .processing-block {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            width: 250px;
+        }
+        
+        .storage-block {
+            background: linear-gradient(135deg, #1abc9c, #16a085);
+            width: 200px;
+        }
+        
+        .mobile-block {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            width: 300px;
+        }
+        
+        .privacy-block {
+            background: linear-gradient(135deg, #34495e, #2c3e50);
+            width: 250px;
+        }
+        
+        .arrow {
+            font-size: 2em;
+            color: #7f8c8d;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .tool-item {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8em;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .section-title {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .workflow-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .horizontal-flow {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .stack-summary {
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 30px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .stack-summary h3 {
+            margin-top: 0;
+            text-align: center;
+            font-size: 1.5em;
+        }
+        
+        .stack-table {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stack-row {
+            display: contents;
+        }
+        
+        .stack-cell {
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .stack-cell.header {
+            background: rgba(255,255,255,0.3);
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .section {
+                flex-direction: column;
+            }
+            
+            .horizontal-flow {
+                flex-direction: column;
+            }
+            
+            .block {
+                width: 100% !important;
+                max-width: 300px;
+            }
+            
+            .stack-table {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 AI Financial Parsing App</h1>
+            <p>Privacy-Preserving Smart Mobile Financial Assistant</p>
+        </div>
+        
+        <div class="flowchart">
+            <!-- Input Sources -->
+            <div class="workflow-section">
+                <div class="section-title">📱 Data Input Sources</div>
+                <div class="input-sources">
+                    <div class="block sms-block">
+                        <h3>📨 SMS Data</h3>
+                        <p>Bank notifications, payment reminders, transaction alerts</p>
+                        <div class="tools-grid">
+                            <div class="tool-item">spaCy</div>
+                            <div class="tool-item">MiniLM</div>
+                            <div class="tool-item">DistilBERT</div>
+                        </div>
+                    </div>
+                    
+                    <div class="block email-block">
+                        <h3>📧 Email Data</h3>
+                        <p>PDF bills, statements, receipts from Gmail/Outlook</p>
+                        <div class="tools-grid">
+                            <div class="tool-item">Gmail API</div>
+                            <div class="tool-item">Graph API</div>
+                            <div class="tool-item">PyMuPDF</div>
+                            <div class="tool-item">Tesseract OCR</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">⬇️</div>
+            
+            <!-- Processing Layer -->
+            <div class="workflow-section">
+                <div class="section-title">🤖 AI Processing Layer</div>
+                <div class="horizontal-flow">
+                    <div class="block processing-block">
+                        <h3>🔍 NLP Processing</h3>
+                        <p>Extract due dates, amounts, categories</p>
+                        <div class="tools-grid">
+                            <div class="tool-item">BERT</div>
+                            <div class="tool-item">TinyBERT</div>
+                            <div class="tool-item">Few-shot LLM</div>
+                            <div class="tool-item">Scikit-learn</div>
+                        </div>
+                    </div>
+                    
+                    <div class="block processing-block">
+                        <h3>🔓 PDF Processing</h3>
+                        <p>Password handling & content extraction</p>
+                        <div class="tools-grid">
+                            <div class="tool-item">PikePDF</div>
+                            <div class="tool-item">Heuristic Passwords</div>
+                            <div class="tool-item">User Prompts</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">⬇️</div>
+            
+            <!-- Storage & Privacy -->
+            <div class="workflow-section">
+                <div class="section-title">🔒 Privacy & Storage</div>
+                <div class="horizontal-flow">
+                    <div class="block storage-block">
+                        <h3>💾 Local Storage</h3>
+                        <p>Encrypted database</p>
+                        <div class="tools-grid">
+                            <div class="tool-item">SQLite</div>
+                            <div class="tool-item">Room (Android)</div>
+                            <div class="tool-item">SQLCipher</div>
+                        </div>
+                    </div>
+                    
+                    <div class="block privacy-block">
+                        <h3>🛡️ Privacy Protection</h3>
+                        <p>On-device inference, local-first</p>
+                        <div class="tools-grid">
+                            <div class="tool-item">TFLite</div>
+                            <div class="tool-item">Android Keystore</div>
+                            <div class="tool-item">Quantized Models</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">⬇️</div>
+            
+            <!-- Mobile App -->
+            <div class="workflow-section">
+                <div class="section-title">📱 Mobile Application</div>
+                <div class="block mobile-block">
+                    <h3>🚀 Flutter App</h3>
+                    <p>Cross-platform UI with notifications, charts, and insights</p>
+                    <div class="tools-grid">
+                        <div class="tool-item">Flutter Framework</div>
+                        <div class="tool-item">fl_chart</div>
+                        <div class="tool-item">Push Notifications</div>
+                        <div class="tool-item">Syncfusion Charts</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stack Summary -->
+            <div class="stack-summary">
+                <h3>📋 Recommended Technology Stack</h3>
+                <div class="stack-table">
+                    <div class="stack-cell header">Component</div>
+                    <div class="stack-cell header">Tools & Frameworks</div>
+                    
+                    <div class="stack-cell">SMS Parsing</div>
+                    <div class="stack-cell">spaCy / MiniLM + DistilBERT</div>
+                    
+                    <div class="stack-cell">Email Parsing</div>
+                    <div class="stack-cell">Gmail API + PyMuPDF + BERT + Scikit-learn</div>
+                    
+                    <div class="stack-cell">PDF Unlocking</div>
+                    <div class="stack-cell">PikePDF + password heuristics</div>
+                    
+                    <div class="stack-cell">Categorization</div>
+                    <div class="stack-cell">TinyBERT</div>
+                    
+                    <div class="stack-cell">Mobile App</div>
+                    <div class="stack-cell">Flutter</div>
+                    
+                    <div class="stack-cell">Dashboards</div>
+                    <div class="stack-cell">fl_chart / Victory Charts</div>
+                    
+                    <div class="stack-cell">Privacy</div>
+                    <div class="stack-cell">Local TFLite models + Encrypted local DB</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Add interactive hover effects
+        document.querySelectorAll('.block').forEach(block => {
+            block.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px) scale(1.02)';
+            });
+            
+            block.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+        
+        // Add click animation
+        document.querySelectorAll('.block').forEach(block => {
+            block.addEventListener('click', function() {
+                this.style.transform = 'translateY(-3px) scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = 'translateY(-5px) scale(1.02)';
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>
