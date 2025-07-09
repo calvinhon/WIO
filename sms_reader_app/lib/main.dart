@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'services/sms_service.dart';
-import 'services/data_sender_service.dart';
 import 'models/sms_message_model.dart';
 import 'screens/nlp_analysis_screen.dart';
 import 'screens/sms_categorization_screen.dart';
 import 'screens/bank_sms_manager_screen.dart';
+import 'screens/database_viewer_screen.dart';
+import 'screens/dashboard_screen.dart';
 
 void main() {
   runApp(const SmsReaderApp());
@@ -35,27 +36,16 @@ class SmsReaderHomePage extends StatefulWidget {
 
 class _SmsReaderHomePageState extends State<SmsReaderHomePage> {
   final SmsService _smsService = SmsService();
-  final DataSenderService _dataSenderService = DataSenderService();
   
   List<SmsMessageModel> _smsMessages = [];
   bool _isLoading = false;
   bool _hasPermission = false;
   String _statusMessage = 'Welcome! Tap "Load SMS" to start reading messages.';
-  String _serverUrl = 'http://your-server.com/api/sms';
-
-  final TextEditingController _urlController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _urlController.text = _serverUrl;
     _checkPermissions();
-  }
-
-  @override
-  void dispose() {
-    _urlController.dispose();
-    super.dispose();
   }
 
   Future<void> _checkPermissions() async {
@@ -114,46 +104,7 @@ class _SmsReaderHomePageState extends State<SmsReaderHomePage> {
     }
   }
 
-  Future<void> _sendToAnalyzer() async {
-    if (_smsMessages.isEmpty) {
-      _showSnackBar('No SMS messages to send', Colors.orange);
-      return;
-    }
 
-    setState(() {
-      _isLoading = true;
-      _statusMessage = 'Sending SMS data to analyzer...';
-    });
-
-    try {
-      _serverUrl = _urlController.text.trim();
-      if (_serverUrl.isEmpty) {
-        throw Exception('Server URL cannot be empty');
-      }
-
-      final success = await _dataSenderService.sendSmsData(_smsMessages, _serverUrl);
-      
-      setState(() {
-        _isLoading = false;
-        if (success) {
-          _statusMessage = 'Successfully sent ${_smsMessages.length} messages to analyzer';
-        } else {
-          _statusMessage = 'Failed to send data to analyzer';
-        }
-      });
-      
-      _showSnackBar(
-        success ? 'Data sent successfully!' : 'Failed to send data',
-        success ? Colors.green : Colors.red,
-      );
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _statusMessage = 'Error sending data: $e';
-      });
-      _showSnackBar('Error: $e', Colors.red);
-    }
-  }
 
   void _categorizeMessages() {
     Navigator.of(context).push(
@@ -179,6 +130,22 @@ class _SmsReaderHomePageState extends State<SmsReaderHomePage> {
     );
   }
 
+  void _openDatabaseViewer() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const DatabaseViewerScreen(),
+      ),
+    );
+  }
+
+  void _openDashboard() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const DashboardScreen(),
+      ),
+    );
+  }
+
   void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -189,38 +156,7 @@ class _SmsReaderHomePageState extends State<SmsReaderHomePage> {
     );
   }
 
-  void _showServerUrlDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Set Server URL'),
-          content: TextField(
-            controller: _urlController,
-            decoration: const InputDecoration(
-              labelText: 'Server URL',
-              hintText: 'http://your-server.com/api/sms',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  _serverUrl = _urlController.text.trim();
-                });
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -228,13 +164,6 @@ class _SmsReaderHomePageState extends State<SmsReaderHomePage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('SMS Reader & Analyzer'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: _showServerUrlDialog,
-            tooltip: 'Set Server URL',
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -263,11 +192,6 @@ class _SmsReaderHomePageState extends State<SmsReaderHomePage> {
                     ),
                     const SizedBox(height: 8),
                     Text(_statusMessage),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Server: $_serverUrl',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
                   ],
                 ),
               ),
@@ -298,33 +222,21 @@ class _SmsReaderHomePageState extends State<SmsReaderHomePage> {
             
             const SizedBox(height: 8),
             
-                         Row(
-               children: [
-                 Expanded(
-                   child: ElevatedButton.icon(
-                     onPressed: _isLoading || _smsMessages.isEmpty ? null : _sendToAnalyzer,
-                     icon: const Icon(Icons.send),
-                     label: const Text('Send to Server'),
-                     style: ElevatedButton.styleFrom(
-                       backgroundColor: Theme.of(context).colorScheme.primary,
-                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                     ),
-                   ),
-                 ),
-                 const SizedBox(width: 8),
-                 Expanded(
-                   child: ElevatedButton.icon(
-                     onPressed: _isLoading || _smsMessages.isEmpty ? null : _categorizeMessages,
-                     icon: const Icon(Icons.category),
-                     label: const Text('Categorize SMS'),
-                     style: ElevatedButton.styleFrom(
-                       backgroundColor: Theme.of(context).colorScheme.secondary,
-                       foregroundColor: Theme.of(context).colorScheme.onSecondary,
-                     ),
-                   ),
-                 ),
-               ],
-             ),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _isLoading || _smsMessages.isEmpty ? null : _categorizeMessages,
+                    icon: const Icon(Icons.category),
+                    label: const Text('Categorize SMS'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                      foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             
             const SizedBox(height: 8),
             
@@ -350,6 +262,37 @@ class _SmsReaderHomePageState extends State<SmsReaderHomePage> {
                     label: const Text('Bank SMS DB'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 8),
+            
+            // Database tools row
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _openDatabaseViewer,
+                    icon: const Icon(Icons.table_view),
+                    label: const Text('Database Viewer'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _openDashboard,
+                    icon: const Icon(Icons.dashboard),
+                    label: const Text('Dashboard'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.indigo,
                       foregroundColor: Colors.white,
                     ),
                   ),

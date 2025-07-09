@@ -105,15 +105,56 @@ class DatabaseHelper {
     final db = await database;
     final result = await db.rawQuery('PRAGMA database_list');
     final tableCount = await db.rawQuery(
-      "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table'"
+      "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
     );
     final bankSmsCount = await db.rawQuery('SELECT COUNT(*) as count FROM $bankSmsTable');
+    
+    // Get count for other tables if they exist
+    final Map<String, int> tableCounts = {};
+    final tablesResult = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+    );
+    
+    for (final table in tablesResult) {
+      final tableName = table['name'] as String;
+      final countResult = await db.rawQuery('SELECT COUNT(*) as count FROM $tableName');
+      tableCounts[tableName] = countResult.first['count'] as int;
+    }
     
     return {
       'path': result.first['file'],
       'version': _databaseVersion,
       'tables': tableCount.first['count'],
       'bankSmsCount': bankSmsCount.first['count'],
+      'tableCounts': tableCounts,
     };
+  }
+
+  // Get all table names
+  Future<List<String>> getAllTableNames() async {
+    final db = await database;
+    final tablesResult = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
+    );
+    return tablesResult.map((row) => row['name'] as String).toList();
+  }
+
+  // Get table schema
+  Future<List<Map<String, dynamic>>> getTableSchema(String tableName) async {
+    final db = await database;
+    return await db.rawQuery("PRAGMA table_info($tableName)");
+  }
+
+  // Get table data with limit
+  Future<List<Map<String, dynamic>>> getTableData(String tableName, {int limit = 100}) async {
+    final db = await database;
+    return await db.rawQuery("SELECT * FROM $tableName LIMIT $limit");
+  }
+
+  // Get table row count
+  Future<int> getTableRowCount(String tableName) async {
+    final db = await database;
+    final result = await db.rawQuery("SELECT COUNT(*) as count FROM $tableName");
+    return result.first['count'] as int;
   }
 } 

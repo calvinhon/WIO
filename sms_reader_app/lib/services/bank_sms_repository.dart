@@ -23,25 +23,32 @@ class BankSmsRepository {
 
   // Insert multiple bank SMS messages in a transaction
   Future<List<int>> insertMultipleBankSms(List<BankSms> bankSmsList) async {
+    print('📥 Repository: Starting batch insert of ${bankSmsList.length} bank SMS messages...');
     final db = await _databaseHelper.database;
     final List<int> ids = [];
     
     await db.transaction((txn) async {
-      for (BankSms bankSms in bankSmsList) {
+      print('🔄 Repository: Transaction started for ${bankSmsList.length} messages');
+      for (int i = 0; i < bankSmsList.length; i++) {
+        final bankSms = bankSmsList[i];
         try {
+          print('📝 Repository: Inserting message ${i + 1}/${bankSmsList.length} from ${bankSms.address}');
           final id = await txn.insert(
             DatabaseHelper.bankSmsTable,
             bankSms.toMap(),
             conflictAlgorithm: ConflictAlgorithm.replace,
           );
           ids.add(id);
+          print('✅ Repository: Inserted with ID: $id');
         } catch (e) {
-          print('Error inserting bank SMS in batch: $e');
+          print('❌ Repository: Error inserting bank SMS ${i + 1} in batch: $e');
+          print('📱 Repository: Message data: ${bankSms.toString()}');
           // Continue with other insertions
         }
       }
     });
     
+    print('🎉 Repository: Transaction completed. Inserted ${ids.length} messages successfully');
     return ids;
   }
 

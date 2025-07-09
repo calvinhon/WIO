@@ -3,7 +3,6 @@ import '../models/bank_sms_model.dart';
 import 'bank_sms_repository.dart';
 
 class SmsCategorizer {
-  // Bank detection patterns based on synthetic_sms_samples.json
   static const List<String> _bankNames = [
     'emirates nbd', 'dubai islamic bank', 'rakbank', 'commercial bank of dubai',
     'fab', 'first abu dhabi bank', 'hsbc uae', 'mashreq', 'adcb', 'nbd',
@@ -13,7 +12,8 @@ class SmsCategorizer {
   static const List<String> _bankKeywords = [
     'credit card', 'debit card', 'card ending', 'statement date', 'total amt due',
     'min amt due', 'due date', 'available limit', 'billing alert', 'fin. charges',
-    'late fees', 'payment processed', 'mini stmt', 'card statement'
+    'late fees', 'payment processed', 'mini stmt', 'card statement', 'bank statement'
+    'using card', 'card number', 'payment'
   ];
 
   static const List<String> _bankPatterns = [
@@ -407,6 +407,8 @@ class SmsCategorizer {
     final BankSmsRepository bankRepository = BankSmsRepository();
     final List<BankSms> newBankMessages = [];
 
+    print('🏦 Starting SMS categorization for ${messages.length} messages...');
+
     for (final message in messages) {
       final category = categorizeMessage(message);
       final categorizedSms = CategorizedSms(
@@ -419,9 +421,12 @@ class SmsCategorizer {
 
       // Save bank messages to database
       if (category.category == 'Bank') {
+        print('🏦 Found bank message from ${message.address}: ${message.body?.substring(0, 50)}...');
         try {
           // Check if this bank SMS already exists to avoid duplicates
           final messageDate = message.date ?? DateTime.now();
+          print('📅 Checking if message exists (date: $messageDate)...');
+          
           final exists = await bankRepository.bankSmsExists(
             message.address ?? '',
             message.body ?? '',
@@ -429,6 +434,7 @@ class SmsCategorizer {
           );
 
           if (!exists) {
+            print('✅ New bank message, preparing to save...');
             final bankSms = BankSms.fromCategorizedSms(
               address: message.address ?? '',
               body: message.body ?? '',
@@ -439,29 +445,40 @@ class SmsCategorizer {
             );
             
             newBankMessages.add(bankSms);
+            print('➕ Added to batch: ${newBankMessages.length} bank messages ready');
+          } else {
+            print('⚠️ Bank message already exists in database, skipping...');
           }
         } catch (e) {
-          print('Error checking/preparing bank SMS for database: $e');
+          print('❌ Error checking/preparing bank SMS for database: $e');
         }
       }
     }
 
     // Batch insert new bank messages for better performance
+    print('💾 Processing ${newBankMessages.length} new bank messages for database...');
     if (newBankMessages.isNotEmpty) {
       try {
-        await bankRepository.insertMultipleBankSms(newBankMessages);
-        print('Successfully saved ${newBankMessages.length} new bank messages to database');
+        print('🚀 Starting batch insert of ${newBankMessages.length} bank messages...');
+        final insertedIds = await bankRepository.insertMultipleBankSms(newBankMessages);
+        print('✅ Successfully saved ${newBankMessages.length} new bank messages to database');
+        print('📊 Inserted IDs: ${insertedIds.take(5).toList()}${insertedIds.length > 5 ? '...' : ''}');
       } catch (e) {
-        print('Error saving bank messages to database: $e');
+        print('❌ Error saving bank messages to database: $e');
+        print('📱 Stack trace: ${StackTrace.current}');
       }
+    } else {
+      print('ℹ️ No new bank messages to save (all messages already exist or no bank messages found)');
     }
 
     // Get database statistics for additional info
     Map<String, dynamic> dbStats = {};
     try {
+      print('📈 Getting database statistics...');
       dbStats = await bankRepository.getBankSmsStatistics();
+      print('📊 Database stats: Total messages: ${dbStats['total']}, Unique senders: ${dbStats['uniqueSenders']}');
     } catch (e) {
-      print('Error getting database statistics: $e');
+      print('❌ Error getting database statistics: $e');
     }
 
     return {
