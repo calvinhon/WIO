@@ -1,182 +1,187 @@
-import pikepdf
-import re
-import itertools
 import sqlite3
-from datetime import datetime, timedelta
+import requests
+import json
+import re
+import os
+from dataclasses import dataclass
+from datetime import datetime
+from typing import List, Dict
+import PyPDF2
 
-class PDFUnlocker:
-	def __init__(self, db_path='email_data.db'):
-		self.db_path = db_path
-		self.common_patterns = [
-			# Date patterns
-			lambda: datetime.now().strftime("%d%m%Y"),
-			lambda: datetime.now().strftime("%d%m%y"),
-			lambda: datetime.now().strftime("%Y%m%d"),
-			lambda: (datetime.now() - timedelta(days=30)).strftime("%d%m%Y"),
-			
-			# Common passwords
-			"password", "123456", "admin", "user",
-			"creditcard", "statement", "default"
-		]
+@dataclass
+class PasswordCandidate:
+    password: str
+    confidence: float
+    reasoning: str
 
-	def load_privacy_data(self):
-		"""
-		Load privacy-related data from the email database
-		Returns a list of dicts, each representing one email's hints and info
-		Expected columns in DB: password_hints, sender, subject, etc.
-		"""
-		conn = sqlite3.connect(self.db_path)
-		c = conn.cursor()
-		c.execute("SELECT id, password_hints, subject, sender FROM emails")
-		rows = c.fetchall()
-		conn.close()
+class OllamaLLM:
+    def __init__(self, model="llama3.1:8b", host="http://localhost:11434"):
+        self.model = model
+        self.base_url = host
 
-		data = []
-		for row in rows:
-			msg_id, hints_json, subject, sender = row
-			hints = []
-			if hints_json:
-				import json
-				try:
-					hints = json.loads(hints_json)
-				except Exception:
-					hints = []
-			data.append({
-				"msg_id": msg_id,
-				"password_hints": hints,
-				"subject": subject,
-				"sender": sender
-			})
-		return data
+    def is_available(self) -> bool:
+        try:
+            r = requests.get(f"{self.base_url}/api/tags", timeout=5)
+            return r.status_code == 200
+        except:
+            return False
 
-	def extract_extra_info_candidates(self):
-		"""
-		Stub function: Replace with real extraction from user data or DB.
-		For example:
-		- date of birth formats
-		- user full name variations (e.g. firstname, lastname, initials)
-		- mobile phone number parts
-		- last 4 digits of card or account number
-		Returns a list of strings representing privacy info to try
-		"""
-		# Example static values, replace or load dynamically
-		dob_formats = ["01011990", "010190", "19900101"]  # ddmmyyyy, ddmmyy, yyyymmdd
-		names = ["hoach", "hoachtran", "tran"]  # e.g. lowercase, no spaces
-		mobile_parts = ["1234", "5678"]  # last 4 digits of mobile
-		last4_card = ["9876"]
+    def generate_passwords(self, prompt: str) -> List[PasswordCandidate]:
+        payload = {
+            "model": self.model,
+            "prompt": prompt,
+            "stream": False,
+            "options": {
+                "temperature": 0.1,
+                "num_predict": 400
+            }
+        }
+        r = requests.post(f"{self.base_url}/api/generate", json=payload)
+        if r.status_code != 200:
+            raise Exception("Ollama failed: " + str(r.text))
+        
+        try:
+            text = r.json().get("response", "")
+            match = re.search(r'\{.*\}', text, re.DOTALL)
+            if not match:
+                return []
+            parsed = json.loads(match.group(0))
+            return [
+                PasswordCandidate(p['password'], float(p['confidence']), p['reasoning'])
+                for p in parsed.get("passwords", [])
+            ]
+        except Exception as e:
+            print(f"Parsing failed: {e}")
+            return []
 
-		# Combine all as candidate strings
-		candidates = dob_formats + names + mobile_parts + last4_card
-		return candidates
+class PasswordUnlocker:
+    def __init__(self, db_path='email_data.db'):
+        self.db_path = db_path
+        self.llm = OllamaLLM()
 
-	def generate_password_candidates(self, hints, privacy_info):
-		"""
-		Generate password guesses from hints + privacy info + common patterns
-		Combine hints and privacy_info with common patterns as single or concat combos
-		"""
-		candidates = set()
+    def get_email(self, email_id: str) -> Dict:
+        conn = sqlite3.connect(self.db_path)
+        c = conn.cursor()
+        c.execute('''
+            SELECT subject, sender, email_body, password_hints, password_rules
+            FROM emails WHERE id = ?
+        ''', (email_id,))
+        row = c.fetchone()
+        conn.close()
+        if not row:
+            raise Exception("Email not found")
+        return {
+            "subject": row[0],
+            "sender": row[1],
+            "body": row[2],
+            "hints": json.loads(row[3]) if row[3] else [],
+            "rules": json.loads(row[4]) if row[4] else []
+        }
 
-		# Add all common patterns (evaluated)
-		for pattern in self.common_patterns:
-			if callable(pattern):
-				candidates.add(pattern())
-			else:
-				candidates.add(pattern)
+    def get_personal_data(self) -> Dict[str, List[str]]:
+        conn = sqlite3.connect(self.db_path)
+        c = conn.cursor()
+        c.execute('SELECT data_type, data_value FROM personal_data')
+        data = {}
+        for data_type, value in c.fetchall():
+            data.setdefault(data_type, []).append(value)
+        conn.close()
+        return data
 
-		# Add all hints and privacy info
-		for x in hints + privacy_info:
-			candidates.add(str(x))
+    def create_prompt(self, email: Dict, personal_data: Dict) -> str:
+        prompt = f"""You are an expert in understanding password rules in bank emails.
+Your task is to predict likely PDF passwords using the email content, password hints, rules, and user data.
 
-		# Generate simple concatenations of hint + privacy_info (e.g. hint + dob)
-		for hint, priv in itertools.product(hints, privacy_info):
-			combined = f"{hint}{priv}"
-			candidates.add(combined)
-			candidates.add(f"{priv}{hint}")
+EMAIL SUBJECT: {email['subject']}
+EMAIL BODY: {email['body'][:800]}...
+SENDER: {email['sender']}
+PASSWORD HINTS: {', '.join(email['hints']) if email['hints'] else 'None'}
+PASSWORD RULES: {', '.join(email['rules']) if email['rules'] else 'None'}
 
-		return list(candidates)
+PERSONAL DATA:
+"""
+        for k, v in personal_data.items():
+            prompt += f"- {k}: {', '.join(v[:3])}\n"
 
-	def try_unlock_pdf(self, pdf_path, password_list=None):
-		"""Try to unlock PDF with various passwords"""
-		if password_list is None:
-			password_list = []
+        prompt += """
+Give the top 5 most likely passwords in JSON format:
+{
+  "passwords": [
+    {
+      "password": "123456",
+      "confidence": 9,
+      "reasoning": "It's the last 4 digits of the card + birth year"
+    }
+  ]
+}
+Respond ONLY with JSON.
+"""
+        return prompt
 
-		# Try without password first
-		try:
-			pdf = pikepdf.open(pdf_path)
-			print(f"✅ PDF is not password protected: {pdf_path}")
-			return pdf, None
-		except pikepdf._qpdf.PasswordError:
-			pass
+    def test_pdf(self, pdf_path: str, password: str) -> bool:
+        try:
+            with open(pdf_path, "rb") as f:
+                reader = PyPDF2.PdfReader(f)
+                if reader.is_encrypted:
+                    return reader.decrypt(password)
+                return True
+        except Exception as e:
+            print(f"Error testing PDF: {e}")
+            return False
+def unlock_pdf(self, email_id: str, pdf_path: str):
+    if not os.path.exists(pdf_path):
+        raise Exception("PDF not found")
 
-		for password in password_list:
-			try:
-				pdf = pikepdf.open(pdf_path, password=str(password))
-				print(f"✅ PDF unlocked with password: {password}")
-				return pdf, password
-			except pikepdf._qpdf.PasswordError:
-				continue
-		
-		print(f"❌ Could not unlock PDF: {pdf_path}")
-		return None, None
-	
-	def unlock_and_save(self, pdf_path, password_list=None, output_path=None):
-		"""Unlock PDF and save unlocked version"""
-		pdf, password = self.try_unlock_pdf(pdf_path, password_list)
-		if not pdf:
-			print("❌ Failed to unlock.")
-			return None
+    if not self.llm.is_available():
+        raise Exception("Ollama model not available")
 
-		if output_path is None:
-			output_path = pdf_path.replace('.pdf', '_unlocked.pdf')
+    email = self.get_email(email_id)
+    personal_data = self.get_personal_data()
+    prompt = self.create_prompt(email, personal_data)
 
-		pdf.save(output_path)
-		pdf.close()
-		print(f"📄 Saved unlocked file to {output_path}")
-		return output_path
+    print("\n📨 Prompt sent to LLM:\n")
+    print(prompt)
 
+    candidates = self.llm.generate_passwords(prompt)
 
-	def unlock_pdfs_from_db(self, download_dir='downloads'):
-		"""
-		Attempt to unlock all PDFs stored in DB metadata with associated hints and privacy info.
-		"""
-		privacy_info = self.extract_extra_info_candidates()
-		data = self.load_privacy_data()
+    print("\n🤖 Passwords returned by LLM:\n")
+    for cand in candidates:
+        print(f"- Password: {cand.password}")
+        print(f"  Confidence: {cand.confidence}")
+        print(f"  Reasoning: {cand.reasoning}")
+        print("-----")
 
-		for email in data:
-			hints = email.get('password_hints', [])
-			msg_id = email.get('msg_id')
-			# Fetch attachments from DB
-			# Assuming attachments stored as JSON list of filepaths
-			attachments = []
-			try:
-				conn = sqlite3.connect(self.db_path)
-				c = conn.cursor()
-				c.execute("SELECT attachments FROM emails WHERE id=?", (msg_id,))
-				row = c.fetchone()
-				conn.close()
-				if row and row[0]:
-					attachments = json.loads(row[0])
-			except Exception as e:
-				print(f"Failed to get attachments for {msg_id}: {e}")
+    for cand in candidates:
+        print(f"🔐 Trying password: {cand.password} — Reason: {cand.reasoning}")
+        if self.test_pdf(pdf_path, cand.password):
+            print(f"✅ SUCCESS! Password: {cand.password}")
+            return cand.password
 
-			if not attachments:
-				print(f"No attachments found for email {msg_id}")
-				continue
+    print("❌ Failed to unlock the PDF with LLM-generated passwords.")
+    return None
 
-			# Generate candidate passwords
-			candidates = self.generate_password_candidates(hints, privacy_info)
+    #def unlock_pdf(self, email_id: str, pdf_path: str):
+    #    if not os.path.exists(pdf_path):
+    #        raise Exception("PDF not found")
 
-			for pdf_path in attachments:
-				print(f"\nTrying to unlock PDF: {pdf_path} for email {msg_id}")
-				pdf, password = self.try_unlock_pdf(pdf_path, candidates)
-				if pdf:
-					unlocked_path = pdf_path.replace('.pdf', '_unlocked.pdf')
-					pdf.save(unlocked_path)
-					pdf.close()
-					print(f"📄 Unlocked PDF saved: {unlocked_path}")
-				else:
-					print(f"Failed to unlock PDF {pdf_path}")
+    #    if not self.llm.is_available():
+    #        raise Exception("Ollama model not available")
 
+    #    email = self.get_email(email_id)
+    #    personal_data = self.get_personal_data()
+    #    prompt = self.create_prompt(email, personal_data)
+    #    candidates = self.llm.generate_passwords(prompt)
+
+    #    for cand in candidates:
+    #        print(f"Trying: {cand.password} — Reason: {cand.reasoning}")
+    #        if self.test_pdf(pdf_path, cand.password):
+    #            print(f"✅ SUCCESS! Password: {cand.password}")
+    #            return cand.password
+    #    print("❌ Failed to unlock the PDF with LLM-generated passwords.")
+    #    return None
 if __name__ == "__main__":
-	unlocker = PDFUnlocker()
-	unlocker.unlock_pdfs_from_db()
+    email_id = "197ea038354ad840"  # Replace with a real ID from your database
+    pdf_path = "downloads/EStatement_20250709_084140.pdf"  # Replace with your actual PDF path
+
+    unlocker = PasswordUnlocker()
+    unlocker.unlock_pdf(email_id, pdf_path)
