@@ -61,6 +61,19 @@ class DatabaseHelper {
       )
     ''');
 
+    //   // Create transactions table
+    // await db.execute('''
+    //   CREATE TABLE transactions (
+    //     Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    //     Bank TEXT NOT NULL,
+    //     Card TEXT NOT NULL,
+    //     Total_Due REAL NOT NULL,
+    //     Minimum_Payment REAL NOT NULL,
+    //     Due_Date TEXT NOT NULL,
+    //     Status TEXT DEFAULT 'not paid' NOT NULL
+    //   )
+    // ''');
+
     // Create indices for better query performance
     await db.execute('''
       CREATE INDEX idx_bank_sms_date ON $bankSmsTable($columnDateTime)

@@ -355,8 +355,14 @@ class _SmsReaderHomePageState extends State<SmsReaderHomePage> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 200, // Match width to other buttons
                   child: ElevatedButton.icon(
                     onPressed: _isLoading ? null : () {
                       Navigator.of(context).push(
