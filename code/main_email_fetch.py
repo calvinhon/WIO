@@ -126,69 +126,6 @@ def test_pdf_unlock(db_path='email_data.db'):
     print("\n🔓 Starting PDF unlock process...")
     client.unlock_pdfs()
 
-#def main():
-#    """Main function with updated menu including Outlook support"""
-#    print("📬 Enhanced Gmail PDF Statement Processor")
-#    print("==================================================")
-    
-#    while True:
-#        print("\n🔧 Main Menu")
-#        print("1. Setup Personal Data")
-#        print("2. Setup Email Providers")
-#        print("3. Process New Emails (All Providers)")
-#        print("4. Process Gmail Only")
-#        print("5. Process Outlook Only")
-#        print("6. View Email Statistics")
-#        print("7. View Recent Emails")
-#        print("8. Test PDF Unlock")
-#        print("9. Unlock All PDFs")
-#        print("10. Database Management")
-#        print("11. Exit")
-        
-#        choice = input("\nSelect option (1-11): ").strip()
-        
-#        if choice == '1':
-#            manager = PersonalDataManager()
-#            manager.setup_interactive()
-        
-#        elif choice == '2':
-#            setup_email_providers()
-        
-#        elif choice == '3':
-#            process_all_providers()
-        
-#        elif choice == '4':
-#            process_gmail_only()
-        
-#        elif choice == '5':
-#            process_outlook_only()
-        
-#        elif choice == '6':
-#            display_unified_email_stats()
-        
-#        elif choice == '7':
-#            try:
-#                limit = int(input("How many recent emails to show? (default 10): ") or "10")
-#                display_recent_emails(limit=limit)
-#            except ValueError:
-#                display_recent_emails()
-        
-#        elif choice == '8':
-#            test_pdf_unlock()
-        
-#        elif choice == '9':
-#            unlock_all_pdfs_unified()
-        
-#        elif choice == '10':
-#            database_management_menu()
-        
-#        elif choice == '11':
-#            print("👋 Goodbye!")
-#            break
-        
-#        else:
-#            print("❌ Invalid choice!")
-
 def main():
     """Main function with enhanced personal data management"""
     print("📬 Enhanced Gmail PDF Statement Processor")
@@ -380,107 +317,197 @@ def personal_data_submenu():
             print("❌ Invalid choice!")
 
 def setup_email_providers():
-    """Setup email providers (Gmail and Outlook)"""
+    """Setup email providers (Gmail and Outlook) with improved error handling"""
     print("\n📧 Email Provider Setup")
     print("=" * 30)
     
-    client = UnifiedEmailClient()
+    try:
+        client = UnifiedEmailClient()
+        
+        while True:
+            try:
+                providers = client.list_providers()
+                
+                print(f"\n📋 Current providers ({len(providers)}):")
+                if providers:
+                    for i, provider in enumerate(providers, 1):
+                        status = "✅ Enabled" if provider['enabled'] else "❌ Disabled"
+                        email_count = provider.get('total_emails', 0)
+                        last_sync = provider.get('last_sync', 'Never')
+                        print(f"  {i}. {provider['name']} ({provider['type']}) - {status}")
+                        print(f"     📧 {email_count} emails, Last sync: {last_sync}")
+                else:
+                    print("  No providers configured yet")
+                
+            except Exception as list_error:
+                print(f"⚠️ Error listing providers: {list_error}")
+                print("📧 Continuing with provider setup...")
+                providers = []
+            
+            print("\n🔧 Options:")
+            print("1. Add Gmail Provider")
+            print("2. Add Outlook Provider")
+            print("3. Test All Providers")
+            print("4. Remove Provider")
+            print("5. Repair Database")
+            print("6. Back to Main Menu")
+            
+            choice = input("\nSelect option (1-6): ").strip()
+            
+            if choice == '1':
+                setup_gmail_provider(client)
+            
+            elif choice == '2':
+                setup_outlook_provider(client)
+            
+            elif choice == '3':
+                print("\n🔐 Testing all providers...")
+                try:
+                    auth_results = client.authenticate_all()
+                    
+                    if not auth_results:
+                        print("❌ No providers to test")
+                    else:
+                        for provider, success in auth_results.items():
+                            status = "✅ Success" if success else "❌ Failed"
+                            print(f"  {provider}: {status}")
+                except Exception as auth_error:
+                    print(f"❌ Authentication test failed: {auth_error}")
+            
+            elif choice == '4':
+                try:
+                    current_providers = client.list_providers()
+                    if not current_providers:
+                        print("❌ No providers to remove")
+                        continue
+                    
+                    print("\nSelect provider to remove:")
+                    for i, provider in enumerate(current_providers, 1):
+                        print(f"  {i}. {provider['name']} ({provider['type']})")
+                    
+                    try:
+                        idx = int(input("Enter provider number: ")) - 1
+                        if 0 <= idx < len(current_providers):
+                            provider_to_remove = current_providers[idx]
+                            # Add remove functionality to unified client
+                            print(f"⚠️ Provider removal not yet implemented: {provider_to_remove['name']}")
+                        else:
+                            print("❌ Invalid provider number")
+                    except ValueError:
+                        print("❌ Invalid input")
+                except Exception as remove_error:
+                    print(f"❌ Error removing provider: {remove_error}")
+            
+            elif choice == '5':
+                print("\n🔧 Repairing database...")
+                try:
+                    repair_database()
+                    # Recreate client after repair
+                    client = UnifiedEmailClient()
+                    print("✅ Database repaired, client reinitialized")
+                except Exception as repair_error:
+                    print(f"❌ Database repair failed: {repair_error}")
+            
+            elif choice == '6':
+                break
+            
+            else:
+                print("❌ Invalid choice!")
     
-    while True:
-        providers = client.()
-        
-        print(f"\n📋 Current providers ({len(providers)}):")
-        for i, provider in enumerate(providers, 1):
-            status = "✅ Enabled" if provider['enabled'] else "❌ Disabled"
-            print(f"{i}. {provider['name']} ({provider['type']}) - {status}")
-            print(f"   Last sync: {provider['last_sync'] or 'Never'}")
-            print(f"   Total emails: {provider['total_emails']}")
-        
-        print("\n🔧 Options:")
-        print("1. Add Gmail Provider")
-        print("2. Add Outlook Provider")
-        print("3. Test All Providers")
-        print("4. Back to Main Menu")
-        
-        choice = input("\nSelect option (1-4): ").strip()
-        
-        if choice == '1':
-            setup_gmail_provider(client)
-        
-        elif choice == '2':
-            setup_outlook_provider(client)
-        
-        elif choice == '3':
-            test_all_providers(client)
-        
-        elif choice == '4':
-            break
-        
-        else:
-            print("❌ Invalid choice!")
+    except Exception as e:
+        print(f"❌ Critical error in provider setup: {e}")
+        print("\n💡 Try these troubleshooting steps:")
+        print("1. Run Database Repair (option 5)")
+        print("2. Check if email_data.db file has proper permissions")
+        print("3. Try deleting email_data.db and recreating it")
 
 def setup_gmail_provider(client):
-    """Setup Gmail provider"""
+    """Setup Gmail provider with the unified client"""
     print("\n📧 Gmail Provider Setup")
     print("=" * 25)
     
-    credentials_file = input("Enter Gmail credentials file path (default: credentials.json): ").strip()
-    if not credentials_file:
-        credentials_file = "./secret/credentials.json"
+    try:
+        # Check for credentials file
+        import os
+        credential_paths = [
+            "./secret/credentials.json",
+            "./credentials.json",
+            "credentials.json"
+        ]
+        
+        credentials_file = None
+        for path in credential_paths:
+            if os.path.exists(path):
+                credentials_file = path
+                print(f"✅ Found credentials at: {path}")
+                break
+        
+        if not credentials_file:
+            credentials_file = input("Enter path to Gmail credentials.json file: ").strip()
+            if not os.path.exists(credentials_file):
+                print("❌ Credentials file not found!")
+                return
+        
+        provider_name = input("Enter name for this Gmail provider (default: Gmail): ").strip()
+        if not provider_name:
+            provider_name = "Gmail"
+        
+        print(f"🔧 Adding Gmail provider '{provider_name}'...")
+        success = client.add_gmail_provider(provider_name, credentials_file)
+        
+        if success:
+            print(f"✅ Gmail provider '{provider_name}' added successfully!")
+        else:
+            print(f"❌ Failed to add Gmail provider '{provider_name}'")
     
-    if not os.path.exists(credentials_file):
-        print(f"❌ Credentials file not found: {credentials_file}")
-        print("\n📋 To setup Gmail:")
-        print("1. Go to Google Cloud Console (https://console.cloud.google.com/)")
-        print("2. Create/select a project")
-        print("3. Enable Gmail API")
-        print("4. Create OAuth 2.0 credentials (Desktop application)")
-        print("5. Download credentials as credentials.json")
-        print("6. Place in the same directory as this script")
-        return
-    
-    success = client.add_gmail_provider("Gmail", credentials_file)
-    if success:
-        print("✅ Gmail provider added successfully!")
-        print("� You can now process Gmail emails")
-    else:
-        print("❌ Failed to add Gmail provider")
+    except Exception as e:
+        print(f"❌ Error setting up Gmail provider: {e}")
 
 def setup_outlook_provider(client):
-    """Setup Outlook provider"""
+    """Setup Outlook provider with the unified client"""
     print("\n📧 Outlook Provider Setup")
-    print("=" * 27)
+    print("=" * 26)
     
-    print("📋 To setup Outlook, you need:")
-    print("1. Azure App Registration client ID")
-    print("2. Optional: Tenant ID (use 'common' for personal accounts)")
-    print("\n📋 Setup instructions:")
-    print("1. Go to Azure Portal (https://portal.azure.com/)")
-    print("2. Navigate to Azure Active Directory > App registrations")
-    print("3. Click 'New registration'")
-    print("4. Enter app name (e.g., 'Email PDF Processor')")
-    print("5. Select 'Accounts in any organizational directory and personal Microsoft accounts'")
-    print("6. Add redirect URI: http://localhost:8080 (Web platform)")
-    print("7. After creation, copy the 'Application (client) ID'")
-    print("8. Go to 'API permissions' > 'Add a permission' > 'Microsoft Graph'")
-    print("9. Add these permissions: Mail.Read, Mail.ReadBasic, User.Read")
-    print("10. Grant admin consent if required")
+    try:
+        print("📋 Outlook Configuration Options:")
+        print("1. Use default test configuration")
+        print("2. Enter custom configuration")
+        
+        choice = input("Select option (1-2): ").strip()
+        
+        if choice == '1':
+            client_id = "86fd58c9-45de-44cb-9fca-615de1513036"
+            tenant_id = "common"
+            provider_name = "Outlook"
+            print("✅ Using default Microsoft test configuration")
+        
+        elif choice == '2':
+            client_id = input("Enter Azure App Client ID: ").strip()
+            tenant_id = input("Enter Tenant ID (default: common): ").strip()
+            if not tenant_id:
+                tenant_id = "common"
+            provider_name = input("Enter name for this Outlook provider (default: Outlook): ").strip()
+            if not provider_name:
+                provider_name = "Outlook"
+        
+        else:
+            print("❌ Invalid choice!")
+            return
+        
+        if not client_id:
+            print("❌ Client ID is required!")
+            return
+        
+        print(f"🔧 Adding Outlook provider '{provider_name}'...")
+        success = client.add_outlook_provider(provider_name, client_id, tenant_id)
+        
+        if success:
+            print(f"✅ Outlook provider '{provider_name}' added successfully!")
+        else:
+            print(f"❌ Failed to add Outlook provider '{provider_name}'")
     
-    client_id = input("\nEnter Outlook Client ID: ").strip()
-    if not client_id:
-        client_id = "86fd58c9-45de-44cb-9fca-615de1513036"
-        print(f"Using default Client ID: {client_id}")
-    
-    tenant_id = input("Enter Tenant ID (default: common): ").strip()
-    if not tenant_id:
-        tenant_id = "common"
-    
-    success = client.add_outlook_provider("Outlook", client_id, tenant_id)
-    if success:
-        print("✅ Outlook provider added successfully!")
-        print("📧 You can now process Outlook emails")
-    else:
-        print("❌ Failed to add Outlook provider")
+    except Exception as e:
+        print(f"❌ Error setting up Outlook provider: {e}")
 
 def test_all_providers(client):
     """Test authentication for all providers"""

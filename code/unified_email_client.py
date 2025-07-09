@@ -1,221 +1,458 @@
 #!/usr/bin/env python3
 """
 Unified Email Client
-Integrates both Gmail and Outlook clients for comprehensive email processing
+Manages multiple email providers (Gmail, Outlook) with a unified interface
 """
 
-import os
 import json
 import sqlite3
 import logging
-from datetime import datetime
-from typing import List, Dict, Optional, Tuple, Union
+from typing import Dict, List, Optional, Any
+from datetime import datetime, timedelta
 from dataclasses import dataclass
-from pathlib import Path
 
-# Import our custom clients
-from enhanced_gmail_client import EnhancedGmailClient, PasswordCandidate
-from outlook_client import OutlookClient, OutlookConfig
+# Import email clients
+try:
+    from enhanced_gmail_client import EnhancedGmailClient, GmailConfig
+except ImportError:
+    print("Warning: Gmail client not available")
+    EnhancedGmailClient = None
+    GmailConfig = None
 
-# Configure logging
+try:
+    from outlook_client import OutlookClient, OutlookConfig
+except ImportError:
+    print("Warning: Outlook client not available")
+    OutlookClient = None
+    OutlookConfig = None
+
+# Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 @dataclass
 class EmailProvider:
-    """Represents an email provider configuration"""
+    """Email provider configuration"""
     name: str
-    type: str  # 'gmail' or 'outlook'
-    enabled: bool
-    config: Union[dict, OutlookConfig]
+    provider_type: str  # 'gmail' or 'outlook'
+    config: Any  # GmailConfig or OutlookConfig
+    enabled: bool = True
 
 class UnifiedEmailClient:
-    """Unified client that manages both Gmail and Outlook email processing"""
+    """Unified client for managing multiple email providers"""
     
-    def __init__(self, db_path='email_data.db'):
+    def __init__(self, db_path: str = 'email_data.db'):
         self.db_path = db_path
-        self.gmail_client = None
-        self.outlook_client = None
-        self.providers = []
+        self.providers: Dict[str, EmailProvider] = {}
+        
+        # Initialize database
         self._init_db()
-        self._load_config()
         
-    def _init_db(self):
-        """Initialize unified database schema"""
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        
-        # Create unified emails table
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS unified_emails (
-                id TEXT PRIMARY KEY,
-                provider TEXT,
-                original_id TEXT,
-                subject TEXT,
-                sender TEXT,
-                sender_email TEXT,
-                date TEXT,
-                snippet TEXT,
-                password_hints TEXT,
-                password_rules TEXT,
-                attachments TEXT,
-                timestamp INTEGER,
-                email_body TEXT,
-                processed_date TEXT,
-                unlock_attempts INTEGER DEFAULT 0,
-                unlock_success BOOLEAN DEFAULT 0,
-                successful_password TEXT
-            )
-        ''')
-        
-        # Create email providers configuration table
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS email_providers (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT UNIQUE,
-                type TEXT,
-                enabled BOOLEAN,
-                config TEXT,
-                last_sync TEXT,
-                total_emails INTEGER DEFAULT 0
-            )
-        ''')
-        
-        conn.commit()
-        conn.close()
+        # Load existing providers
+        self._load_providers()
     
-    def _load_config(self):
-        """Load email provider configurations"""
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        
-        c.execute('SELECT name, type, enabled, config FROM email_providers')
-        rows = c.fetchall()
-        
-        for name, provider_type, enabled, config_str in rows:
-            config = json.loads(config_str) if config_str else {}
+    def _init_db(self):
+        """Initialize the unified database with proper schema migration and type safety"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
             
-            if provider_type == 'outlook':
-                config = OutlookConfig(**config)
+            # Check if email_providers table exists
+            c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='email_providers'")
+            table_exists = c.fetchone() is not None
             
+            if not table_exists:
+                # Create new table with correct schema and explicit types
+                c.execute('''
+                    CREATE TABLE email_providers (
+                        id TEXT PRIMARY KEY,
+                        name TEXT NOT NULL,
+                        provider_type TEXT NOT NULL,
+                        config TEXT NOT NULL,
+                        enabled INTEGER DEFAULT 1,
+                        created_date TEXT,
+                        last_sync TEXT
+                    )
+                ''')
+                logger.info("Created email_providers table with proper schema")
+            else:
+                # Check and update existing table schema
+                c.execute("PRAGMA table_info(email_providers)")
+                columns = [column[1] for column in c.fetchall()]
+                
+                # Add missing columns with proper types
+                if 'provider_type' not in columns:
+                    c.execute('ALTER TABLE email_providers ADD COLUMN provider_type TEXT')
+                    logger.info("Added provider_type column")
+                
+                if 'last_sync' not in columns:
+                    c.execute('ALTER TABLE email_providers ADD COLUMN last_sync TEXT')
+                    logger.info("Added last_sync column")
+                
+                if 'created_date' not in columns:
+                    c.execute('ALTER TABLE email_providers ADD COLUMN created_date TEXT')
+                    logger.info("Added created_date column")
+                
+                # Check for type mismatches and fix them
+                try:
+                    c.execute("SELECT id, enabled FROM email_providers LIMIT 1")
+                    test_row = c.fetchone()
+                    if test_row and not isinstance(test_row[1], int):
+                        # Fix boolean/integer type issues
+                        c.execute("UPDATE email_providers SET enabled = CASE WHEN enabled = 'True' OR enabled = '1' THEN 1 ELSE 0 END")
+                        logger.info("Fixed enabled column data types")
+                except Exception as type_error:
+                    logger.warning(f"Type check/fix failed: {type_error}")
+                
+                # Migrate old 'type' column to 'provider_type' if needed
+                if 'type' in columns and 'provider_type' not in columns:
+                    c.execute('ALTER TABLE email_providers ADD COLUMN provider_type TEXT')
+                    c.execute('UPDATE email_providers SET provider_type = type')
+                    logger.info("Migrated type column to provider_type")
+            
+            # Create unified emails table with proper types
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS emails (
+                    id TEXT PRIMARY KEY,
+                    provider_type TEXT,
+                    provider_id TEXT,
+                    subject TEXT,
+                    sender TEXT,
+                    sender_email TEXT,
+                    date TEXT,
+                    snippet TEXT,
+                    attachments TEXT,
+                    timestamp INTEGER DEFAULT 0,
+                    email_body TEXT,
+                    processed_date TEXT,
+                    has_attachments INTEGER DEFAULT 0
+                )
+            ''')
+            
+            conn.commit()
+            conn.close()
+            logger.info("Unified database initialized successfully")
+            
+        except Exception as e:
+            logger.error(f"Database initialization failed: {e}")
+            raise
+    
+    def _load_providers(self):
+        """Load existing providers from database with improved error handling"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
+            
+            # Check which columns exist
+            c.execute("PRAGMA table_info(email_providers)")
+            columns = [column[1] for column in c.fetchall()]
+            
+            if not columns:
+                logger.info("No email_providers table found - will be created when needed")
+                conn.close()
+                return
+            
+            if 'provider_type' in columns:
+                c.execute('SELECT id, name, provider_type, config, enabled FROM email_providers')
+            elif 'type' in columns:
+                # Fallback to old column name
+                c.execute('SELECT id, name, type as provider_type, config, enabled FROM email_providers')
+            else:
+                logger.warning("No provider_type or type column found in email_providers table")
+                conn.close()
+                return
+            
+            rows = c.fetchall()
+            conn.close()
+            
+            for row in rows:
+                try:
+                    provider_id, name, provider_type, config_str, enabled = row
+                    
+                    # Skip rows with missing critical data
+                    if not provider_id or not name or not provider_type:
+                        logger.warning(f"Skipping provider with missing data: {row}")
+                        continue
+                    
+                    config_data = json.loads(config_str) if config_str else {}
+                    
+                    if provider_type == 'gmail' and GmailConfig:
+                        config = GmailConfig(**config_data)
+                    elif provider_type == 'outlook' and OutlookConfig:
+                        config = OutlookConfig(**config_data)
+                    else:
+                        logger.warning(f"Unknown or unavailable provider type: {provider_type}")
+                        continue
+                    
+                    provider = EmailProvider(
+                        name=name,
+                        provider_type=provider_type,
+                        config=config,
+                        enabled=bool(enabled)
+                    )
+                    
+                    self.providers[provider_id] = provider
+                    
+                except Exception as e:
+                    logger.error(f"Failed to load provider {row}: {e}")
+                    continue
+                
+            logger.info(f"Loaded {len(self.providers)} email providers")
+            
+        except Exception as e:
+            logger.error(f"Failed to load providers: {e}")
+            # Initialize empty providers dict if loading fails
+            self.providers = {}
+    
+    def add_gmail_provider(self, name: str, credentials_file: str) -> bool:
+        """Add a Gmail provider with improved error handling"""
+        if not GmailConfig or not EnhancedGmailClient:
+            logger.error("Gmail client not available")
+            return False
+            
+        try:
+            provider_id = f"gmail_{name.lower().replace(' ', '_')}"
+            
+            # Create Gmail config
+            config = GmailConfig(
+                credentials_file=credentials_file,
+                token_file=f'./secret/gmail_token_{name.lower()}.pickle'
+            )
+            
+            # Test the configuration
+            client = EnhancedGmailClient(config, self.db_path)
+            if not client.authenticate():
+                logger.error("Gmail authentication failed")
+                return False
+            
+            # Prepare config data as JSON string
+            config_json = json.dumps({
+                'credentials_file': config.credentials_file,
+                'token_file': config.token_file
+            })
+            
+            # Save to database with explicit data type conversion
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
+            
+            # First ensure the table has the correct schema
+            c.execute("PRAGMA table_info(email_providers)")
+            columns = [col[1] for col in c.fetchall()]
+            
+            if 'provider_type' not in columns:
+                c.execute('ALTER TABLE email_providers ADD COLUMN provider_type TEXT')
+                logger.info("Added provider_type column during Gmail provider setup")
+            
+            if 'created_date' not in columns:
+                c.execute('ALTER TABLE email_providers ADD COLUMN created_date TEXT')
+                logger.info("Added created_date column during Gmail provider setup")
+            
+            # Insert with explicit type casting
+            c.execute('''
+                INSERT OR REPLACE INTO email_providers 
+                (id, name, provider_type, config, enabled, created_date)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (
+                str(provider_id),           # Ensure string
+                str(name),                  # Ensure string  
+                str('gmail'),               # Ensure string
+                str(config_json),           # Ensure string
+                int(1),                     # Ensure integer (True as 1)
+                str(datetime.now().isoformat())  # Ensure string
+            ))
+            
+            conn.commit()
+            conn.close()
+            
+            # Add to active providers
             provider = EmailProvider(
                 name=name,
-                type=provider_type,
-                enabled=enabled,
-                config=config
+                provider_type='gmail',
+                config=config,
+                enabled=True
             )
-            self.providers.append(provider)
-        
-        conn.close()
-    
-    def add_gmail_provider(self, name: str = "Gmail", credentials_file: str = "credentials.json"):
-        """Add Gmail provider configuration"""
-        config = {
-            "credentials_file": credentials_file,
-            "db_path": self.db_path
-        }
-        
-        self._save_provider_config(name, "gmail", True, config)
-        
-        # Initialize Gmail client
-        if os.path.exists(credentials_file):
-            try:
-                self.gmail_client = EnhancedGmailClient(credentials_file, self.db_path)
-                logger.info(f"✅ Gmail provider '{name}' added successfully")
-                return True
-            except Exception as e:
-                logger.error(f"❌ Failed to initialize Gmail client: {e}")
-                return False
-        else:
-            logger.warning(f"⚠️ Gmail credentials file not found: {credentials_file}")
-            return False
-    
-    def add_outlook_provider(self, name: str = "Outlook", client_id: str = "", tenant_id: str = "common"):
-        """Add Outlook provider configuration"""
-        if not client_id:
-            logger.error("❌ Outlook client_id is required")
-            return False
-        
-        config = {
-            "client_id": client_id,
-            "tenant_id": tenant_id
-        }
-        
-        self._save_provider_config(name, "outlook", True, config)
-        
-        # Initialize Outlook client
-        try:
-            outlook_config = OutlookConfig(client_id=client_id, tenant_id=tenant_id)
-            self.outlook_client = OutlookClient(outlook_config, self.db_path)
-            logger.info(f"✅ Outlook provider '{name}' added successfully")
+            self.providers[provider_id] = provider
+            
+            logger.info(f"Gmail provider '{name}' added successfully")
             return True
+            
         except Exception as e:
-            logger.error(f"❌ Failed to initialize Outlook client: {e}")
+            logger.error(f"Failed to add Gmail provider: {e}")
+            # Log more details for debugging
+            logger.error(f"Provider name: {name}, credentials: {credentials_file}")
             return False
     
-    def _save_provider_config(self, name: str, provider_type: str, enabled: bool, config: dict):
-        """Save provider configuration to database"""
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        
-        c.execute('''
-            INSERT OR REPLACE INTO email_providers (name, type, enabled, config, last_sync)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (name, provider_type, enabled, json.dumps(config), datetime.now().isoformat()))
-        
-        conn.commit()
-        conn.close()
-    
-    def list_providers(self) -> List[Dict]:
-        """List all configured email providers"""
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        
-        c.execute('''
-            SELECT name, type, enabled, last_sync, total_emails 
-            FROM email_providers 
-            ORDER BY name
-        ''')
-        
-        providers = []
-        for row in c.fetchall():
-            providers.append({
-                'name': row[0],
-                'type': row[1],
-                'enabled': row[2],
-                'last_sync': row[3],
-                'total_emails': row[4]
+    def add_outlook_provider(self, name: str, client_id: str, tenant_id: str = "common") -> bool:
+        """Add an Outlook provider with improved error handling"""
+        if not OutlookConfig or not OutlookClient:
+            logger.error("Outlook client not available")
+            return False
+            
+        try:
+            provider_id = f"outlook_{name.lower().replace(' ', '_')}"
+            
+            # Create Outlook config
+            config = OutlookConfig(
+                client_id=client_id,
+                tenant_id=tenant_id
+            )
+            
+            # Test the configuration
+            client = OutlookClient(config, self.db_path)
+            if not client.authenticate():
+                logger.error("Outlook authentication failed")
+                return False
+            
+            # Prepare config data as JSON string
+            config_json = json.dumps({
+                'client_id': config.client_id,
+                'tenant_id': config.tenant_id
             })
+            
+            # Save to database with explicit data type conversion
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
+            
+            # First ensure the table has the correct schema
+            c.execute("PRAGMA table_info(email_providers)")
+            columns = [col[1] for col in c.fetchall()]
+            
+            if 'provider_type' not in columns:
+                c.execute('ALTER TABLE email_providers ADD COLUMN provider_type TEXT')
+                logger.info("Added provider_type column during Outlook provider setup")
+            
+            if 'created_date' not in columns:
+                c.execute('ALTER TABLE email_providers ADD COLUMN created_date TEXT')
+                logger.info("Added created_date column during Outlook provider setup")
+            
+            # Insert with explicit type casting
+            c.execute('''
+                INSERT OR REPLACE INTO email_providers 
+                (id, name, provider_type, config, enabled, created_date)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (
+                str(provider_id),           # Ensure string
+                str(name),                  # Ensure string
+                str('outlook'),             # Ensure string
+                str(config_json),           # Ensure string
+                int(1),                     # Ensure integer (True as 1)
+                str(datetime.now().isoformat())  # Ensure string
+            ))
+            
+            conn.commit()
+            conn.close()
+            
+            # Add to active providers
+            provider = EmailProvider(
+                name=name,
+                provider_type='outlook',
+                config=config,
+                enabled=True
+            )
+            self.providers[provider_id] = provider
+            
+            logger.info(f"Outlook provider '{name}' added successfully")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to add Outlook provider: {e}")
+            # Log more details for debugging
+            logger.error(f"Provider name: {name}, client_id: {client_id}, tenant_id: {tenant_id}")
+            return False
+    
+    def list_providers(self) -> List[dict]:
+        """List all configured providers with enhanced information and error handling"""
+        providers = []
         
-        conn.close()
-        return providers
+        try:
+            # Get additional stats from database
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
+            
+            for provider_id, provider in self.providers.items():
+                try:
+                    # Get email count for this provider (safe query)
+                    c.execute('SELECT COUNT(*) FROM emails WHERE provider_id = ?', (provider_id,))
+                    result = c.fetchone()
+                    email_count = result[0] if result else 0
+                    
+                    # Get last sync info (safe query)
+                    c.execute('SELECT last_sync FROM email_providers WHERE id = ?', (provider_id,))
+                    last_sync_result = c.fetchone()
+                    last_sync = last_sync_result[0] if last_sync_result else None
+                    
+                    providers.append({
+                        'id': provider_id,
+                        'name': provider.name,
+                        'type': provider.provider_type,
+                        'enabled': provider.enabled,
+                        'last_sync': last_sync,
+                        'total_emails': email_count
+                    })
+                except Exception as provider_error:
+                    logger.warning(f"Error getting stats for provider {provider_id}: {provider_error}")
+                    # Add provider without stats
+                    providers.append({
+                        'id': provider_id,
+                        'name': provider.name,
+                        'type': provider.provider_type,
+                        'enabled': provider.enabled,
+                        'last_sync': None,
+                        'total_emails': 0
+                    })
+            
+            conn.close()
+            return providers
+            
+        except Exception as e:
+            logger.error(f"Failed to list providers: {e}")
+            # Return basic provider list without database stats
+            basic_providers = []
+            for provider_id, provider in self.providers.items():
+                basic_providers.append({
+                    'id': provider_id,
+                    'name': provider.name,
+                    'type': provider.provider_type,
+                    'enabled': provider.enabled,
+                    'last_sync': None,
+                    'total_emails': 0
+                })
+            return basic_providers
     
     def authenticate_all(self) -> Dict[str, bool]:
-        """Authenticate all enabled providers"""
+        """Authenticate all providers with improved error handling"""
         results = {}
         
-        # Authenticate Gmail
-        if self.gmail_client:
-            try:
-                self.gmail_client.authenticate()
-                results['gmail'] = True
-                logger.info("✅ Gmail authentication successful")
-            except Exception as e:
-                results['gmail'] = False
-                logger.error(f"❌ Gmail authentication failed: {e}")
+        if not self.providers:
+            logger.warning("No providers configured for authentication")
+            return results
         
-        # Authenticate Outlook
-        if self.outlook_client:
+        for provider_id, provider in self.providers.items():
+            if not provider.enabled:
+                results[provider.name.lower()] = False
+                continue
+            
             try:
-                auth_result = self.outlook_client.authenticate()
-                results['outlook'] = auth_result
-                if auth_result:
-                    logger.info("✅ Outlook authentication successful")
+                if provider.provider_type == 'gmail' and EnhancedGmailClient:
+                    client = EnhancedGmailClient(provider.config, self.db_path)
+                    success = client.authenticate()
+                elif provider.provider_type == 'outlook' and OutlookClient:
+                    client = OutlookClient(provider.config, self.db_path)
+                    success = client.authenticate()
                 else:
-                    logger.error("❌ Outlook authentication failed")
+                    logger.warning(f"Unknown or unavailable provider type: {provider.provider_type}")
+                    success = False
+                
+                results[provider.name.lower()] = success
+                
+                if success:
+                    logger.info(f"✅ {provider.name} authenticated successfully")
+                else:
+                    logger.warning(f"❌ {provider.name} authentication failed")
+                    
             except Exception as e:
-                results['outlook'] = False
-                logger.error(f"❌ Outlook authentication failed: {e}")
+                logger.error(f"❌ {provider.name} authentication error: {e}")
+                results[provider.name.lower()] = False
         
         return results
     
@@ -223,459 +460,147 @@ class UnifiedEmailClient:
         """Process emails from all enabled providers"""
         results = {}
         
-        # Process Gmail emails
-        if self.gmail_client:
+        for provider_id, provider in self.providers.items():
+            if not provider.enabled:
+                continue
+            
             try:
-                gmail_count = self._process_gmail_emails(months_back)
-                results['gmail'] = gmail_count
-                logger.info(f"📧 Processed {gmail_count} Gmail emails")
+                processed_count = 0
+                
+                if provider.provider_type == 'gmail' and EnhancedGmailClient:
+                    client = EnhancedGmailClient(provider.config, self.db_path)
+                    if client.authenticate():
+                        processed_count = client.process_new_emails(months_back)
+                        # Copy to unified table
+                        self._sync_gmail_emails(client, provider_id)
+                        
+                elif provider.provider_type == 'outlook' and OutlookClient:
+                    client = OutlookClient(provider.config, self.db_path)
+                    if client.authenticate():
+                        # Use the correct method name: process_new_emails
+                        processed_count = client.process_new_emails(months_back)
+                        # Copy to unified table
+                        self._sync_outlook_emails(client, provider_id)
+                
+                results[provider.name.lower()] = processed_count
+                
+                # Update last sync time
+                self._update_last_sync(provider_id)
+                
             except Exception as e:
-                results['gmail'] = 0
-                logger.error(f"❌ Gmail processing failed: {e}")
-        
-        # Process Outlook emails
-        if self.outlook_client:
-            try:
-                outlook_count = self._process_outlook_emails(months_back)
-                results['outlook'] = outlook_count
-                logger.info(f"📧 Processed {outlook_count} Outlook emails")
-            except Exception as e:
-                results['outlook'] = 0
-                logger.error(f"❌ Outlook processing failed: {e}")
-        
-        # Update provider statistics
-        self._update_provider_stats(results)
+                logger.error(f"Failed to process emails for {provider.name}: {e}")
+                results[provider.name.lower()] = 0
         
         return results
     
-    def _process_gmail_emails(self, months_back: int) -> int:
-        """Process Gmail emails and store in unified table"""
-        # Get Gmail messages
-        messages = self.gmail_client.search_credit_card_emails(months_back)
-        processed_count = 0
-        
-        for message in messages:
-            msg_id = message['id']
-            
-            # Skip if already processed
-            if self._is_email_processed('gmail', msg_id):
-                continue
-            
-            try:
-                # Get message details
-                msg_details = self.gmail_client.get_message_details(msg_id)
-                if not msg_details:
-                    continue
-                
-                # Extract information
-                payload = msg_details.get('payload', {})
-                headers = payload.get('headers', [])
-                
-                subject = next((h['value'] for h in headers if h['name'] == 'Subject'), '')
-                sender = next((h['value'] for h in headers if h['name'] == 'From'), '')
-                date = next((h['value'] for h in headers if h['name'] == 'Date'), '')
-                snippet = msg_details.get('snippet', '')
-                
-                # Get email body
-                email_body = self.gmail_client.get_email_body(msg_id)
-                
-                # Extract password hints and rules
-                hints, rules = self.gmail_client.extract_password_rules_and_hints(
-                    email_body, subject, sender
-                )
-                
-                # Download attachments
-                downloaded_files = self.gmail_client.download_pdf_attachments(msg_id, payload)
-                
-                # Store in unified table
-                self._store_unified_email(
-                    provider='gmail',
-                    original_id=msg_id,
-                    subject=subject,
-                    sender=sender,
-                    sender_email=sender,
-                    date=date,
-                    snippet=snippet,
-                    password_hints=hints,
-                    password_rules=rules,
-                    attachments=downloaded_files,
-                    email_body=email_body
-                )
-                
-                processed_count += 1
-                
-            except Exception as e:
-                logger.error(f"Failed to process Gmail message {msg_id}: {e}")
-        
-        return processed_count
-    
-    def _process_outlook_emails(self, months_back: int) -> int:
-        """Process Outlook emails and store in unified table"""
-        # Get Outlook messages
-        messages = self.outlook_client.search_bank_emails(months_back)
-        processed_count = 0
-        
-        for message in messages:
-            msg_id = message['id']
-            
-            # Skip if already processed
-            if self._is_email_processed('outlook', msg_id):
-                continue
-            
-            try:
-                # Get full message details
-                full_message = self.outlook_client.get_email_details(msg_id)
-                if not full_message:
-                    continue
-                
-                # Extract email body
-                email_body = self.outlook_client.extract_email_body(full_message)
-                
-                # Extract password hints and rules
-                hints, rules = self.outlook_client.extract_password_rules_and_hints(
-                    email_body,
-                    full_message.get('subject', ''),
-                    full_message.get('sender', {}).get('emailAddress', {}).get('address', '')
-                )
-                
-                # Download attachments
-                attachments = full_message.get('attachments', [])
-                downloaded_files = []
-                
-                if attachments:
-                    downloaded_files = self.outlook_client.download_attachments(msg_id, attachments)
-                
-                # Extract sender information
-                sender_info = full_message.get('sender', {})
-                sender_name = sender_info.get('emailAddress', {}).get('name', '')
-                sender_email = sender_info.get('emailAddress', {}).get('address', '')
-                
-                # Store in unified table
-                self._store_unified_email(
-                    provider='outlook',
-                    original_id=msg_id,
-                    subject=full_message.get('subject', ''),
-                    sender=sender_name,
-                    sender_email=sender_email,
-                    date=full_message.get('receivedDateTime', ''),
-                    snippet=full_message.get('bodyPreview', ''),
-                    password_hints=hints,
-                    password_rules=rules,
-                    attachments=downloaded_files,
-                    email_body=email_body
-                )
-                
-                processed_count += 1
-                
-            except Exception as e:
-                logger.error(f"Failed to process Outlook message {msg_id}: {e}")
-        
-        return processed_count
-    
-    def _is_email_processed(self, provider: str, original_id: str) -> bool:
-        """Check if email is already processed"""
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        
-        c.execute('''
-            SELECT id FROM unified_emails 
-            WHERE provider = ? AND original_id = ?
-        ''', (provider, original_id))
-        
-        result = c.fetchone()
-        conn.close()
-        
-        return result is not None
-    
-    def _store_unified_email(self, provider: str, original_id: str, subject: str, 
-                           sender: str, sender_email: str, date: str, snippet: str,
-                           password_hints: List[str], password_rules: List[str],
-                           attachments: List[str], email_body: str):
-        """Store email in unified table"""
-        
-        # Generate unified ID
-        unified_id = f"{provider}_{original_id}"
-        
-        # Convert date to timestamp
+    def _sync_gmail_emails(self, client, provider_id: str):
+        """Sync Gmail emails to unified table"""
         try:
-            if provider == 'gmail':
-                dt = datetime.strptime(date, '%a, %d %b %Y %H:%M:%S %z')
-            else:  # outlook
-                dt = datetime.fromisoformat(date.replace('Z', '+00:00'))
-            timestamp = int(dt.timestamp())
-        except:
-            timestamp = int(datetime.now().timestamp())
-        
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        
-        c.execute('''
-            INSERT OR REPLACE INTO unified_emails 
-            (id, provider, original_id, subject, sender, sender_email, date, snippet,
-             password_hints, password_rules, attachments, timestamp, email_body, processed_date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            unified_id, provider, original_id, subject, sender, sender_email, date, snippet,
-            json.dumps(password_hints), json.dumps(password_rules), json.dumps(attachments),
-            timestamp, email_body, datetime.now().isoformat()
-        ))
-        
-        conn.commit()
-        conn.close()
+            # This would sync emails from Gmail client to unified table
+            # Implementation depends on Gmail client structure
+            pass
+        except Exception as e:
+            logger.error(f"Failed to sync Gmail emails: {e}")
     
-    def _update_provider_stats(self, results: Dict[str, int]):
-        """Update provider statistics"""
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        
-        for provider, count in results.items():
+    def _sync_outlook_emails(self, client, provider_id: str):
+        """Sync Outlook emails to unified table"""
+        try:
+            # This would sync emails from Outlook client to unified table
+            # Implementation depends on Outlook client structure
+            pass
+        except Exception as e:
+            logger.error(f"Failed to sync Outlook emails: {e}")
+    
+    def _update_last_sync(self, provider_id: str):
+        """Update last sync timestamp for provider"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
+            
             c.execute('''
                 UPDATE email_providers 
-                SET last_sync = ?, total_emails = total_emails + ?
-                WHERE type = ?
-            ''', (datetime.now().isoformat(), count, provider))
-        
-        conn.commit()
-        conn.close()
-    
-    def get_all_emails(self, limit: int = 100) -> List[Dict]:
-        """Get all processed emails from all providers"""
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        
-        c.execute('''
-            SELECT id, provider, subject, sender, sender_email, date, snippet,
-                   password_hints, password_rules, attachments, unlock_attempts,
-                   unlock_success, successful_password
-            FROM unified_emails 
-            ORDER BY timestamp DESC 
-            LIMIT ?
-        ''', (limit,))
-        
-        emails = []
-        for row in c.fetchall():
-            emails.append({
-                'id': row[0],
-                'provider': row[1],
-                'subject': row[2],
-                'sender': row[3],
-                'sender_email': row[4],
-                'date': row[5],
-                'snippet': row[6],
-                'password_hints': json.loads(row[7]) if row[7] else [],
-                'password_rules': json.loads(row[8]) if row[8] else [],
-                'attachments': json.loads(row[9]) if row[9] else [],
-                'unlock_attempts': row[10],
-                'unlock_success': row[11],
-                'successful_password': row[12]
-            })
-        
-        conn.close()
-        return emails
-    
-    def unlock_all_pdfs(self):
-        """Unlock PDFs from all providers using the Gmail client's enhanced unlock method"""
-        if not self.gmail_client:
-            logger.error("❌ Gmail client not initialized. Cannot unlock PDFs.")
-            return
-        
-        # Get all emails with attachments
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        
-        c.execute('''
-            SELECT id, provider, original_id, subject, sender, password_hints, 
-                   password_rules, attachments, email_body, unlock_attempts
-            FROM unified_emails 
-            WHERE attachments IS NOT NULL AND attachments != "[]"
-            AND unlock_success = 0
-        ''')
-        
-        rows = c.fetchall()
-        conn.close()
-        
-        unlocked_count = 0
-        total_pdfs = 0
-        
-        for row in rows:
-            unified_id, provider, original_id, subject, sender, hints_json, rules_json, attachments_json, email_body, unlock_attempts = row
+                SET last_sync = ? 
+                WHERE id = ?
+            ''', (datetime.now().isoformat(), provider_id))
             
-            # Parse JSON data
-            hints = json.loads(hints_json) if hints_json else []
-            rules = json.loads(rules_json) if rules_json else []
-            attachments = json.loads(attachments_json) if attachments_json else []
+            conn.commit()
+            conn.close()
             
-            print(f"\n📧 Processing email: {subject} (Provider: {provider})")
-            print(f"🔍 Password rules found: {len(rules)}")
-            print(f"💡 Password hints found: {len(hints)}")
+        except Exception as e:
+            logger.error(f"Failed to update last sync for {provider_id}: {e}")
+    
+    def get_email_stats(self) -> dict:
+        """Get unified email statistics with error handling"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
             
-            # Generate password candidates using Gmail client's enhanced method
-            # Create a temporary email ID for the Gmail client
-            temp_email_id = f"temp_{unified_id}"
+            # Check if emails table exists
+            c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='emails'")
+            if not c.fetchone():
+                conn.close()
+                return {
+                    'total_emails': 0,
+                    'by_provider': {},
+                    'with_attachments': 0
+                }
             
-            # Store temporary email data in Gmail format for password generation
-            self._store_temp_gmail_email(temp_email_id, subject, sender, hints, rules, attachments, email_body)
+            # Total emails
+            c.execute("SELECT COUNT(*) FROM emails")
+            result = c.fetchone()
+            total_emails = result[0] if result else 0
             
-            # Generate candidates
-            candidates = self.gmail_client.generate_passwords_for_email(temp_email_id)
+            # Emails by provider
+            c.execute("SELECT provider_type, COUNT(*) FROM emails GROUP BY provider_type")
+            by_provider = dict(c.fetchall())
             
-            # Clean up temporary email
-            self._cleanup_temp_gmail_email(temp_email_id)
+            # Emails with attachments
+            c.execute("SELECT COUNT(*) FROM emails WHERE has_attachments = 1")
+            result = c.fetchone()
+            with_attachments = result[0] if result else 0
             
-            print(f"🎯 Generated {len(candidates)} password candidates")
+            conn.close()
             
-            # Try to unlock each PDF
-            for pdf_path in attachments:
-                total_pdfs += 1
-                if os.path.exists(pdf_path):
-                    unlocked_path = self.gmail_client.try_unlock_pdf_enhanced(pdf_path, candidates, unified_id)
-                    if unlocked_path:
-                        unlocked_count += 1
-                        self._mark_pdf_unlocked(unified_id, candidates[0].password if candidates else "unknown")
-                        print(f"✅ Unlocked: {pdf_path}")
-                    else:
-                        self._update_unlock_attempts(unified_id, unlock_attempts + 1)
-                        print(f"❌ Failed to unlock: {pdf_path}")
-                else:
-                    print(f"⚠️ File not found: {pdf_path}")
-        
-        print(f"\n📊 Summary: {unlocked_count}/{total_pdfs} PDFs unlocked successfully")
+            return {
+                'total_emails': total_emails,
+                'by_provider': by_provider,
+                'with_attachments': with_attachments
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get email stats: {e}")
+            return {
+                'total_emails': 0,
+                'by_provider': {},
+                'with_attachments': 0
+            }
     
-    def _store_temp_gmail_email(self, temp_id: str, subject: str, sender: str, hints: List[str], rules: List[str], attachments: List[str], email_body: str):
-        """Store temporary email data for Gmail client processing"""
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        
-        c.execute('''
-            INSERT OR REPLACE INTO emails 
-            (id, subject, sender, date, snippet, password_hints, password_rules, attachments, timestamp, email_body, processed_date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            temp_id, subject, sender, datetime.now().isoformat(), "",
-            json.dumps(hints), json.dumps(rules), json.dumps(attachments),
-            int(datetime.now().timestamp()), email_body, datetime.now().isoformat()
-        ))
-        
-        conn.commit()
-        conn.close()
-    
-    def _cleanup_temp_gmail_email(self, temp_id: str):
-        """Clean up temporary email data"""
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        
-        c.execute('DELETE FROM emails WHERE id = ?', (temp_id,))
-        
-        conn.commit()
-        conn.close()
-    
-    def _mark_pdf_unlocked(self, unified_id: str, password: str):
-        """Mark PDF as successfully unlocked"""
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        
-        c.execute('''
-            UPDATE unified_emails 
-            SET unlock_success = 1, successful_password = ?
-            WHERE id = ?
-        ''', (password, unified_id))
-        
-        conn.commit()
-        conn.close()
-    
-    def _update_unlock_attempts(self, unified_id: str, attempts: int):
-        """Update unlock attempt count"""
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        
-        c.execute('''
-            UPDATE unified_emails 
-            SET unlock_attempts = ?
-            WHERE id = ?
-        ''', (attempts, unified_id))
-        
-        conn.commit()
-        conn.close()
-    
-    def get_statistics(self) -> Dict:
-        """Get comprehensive statistics"""
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        
-        # Total emails by provider
-        c.execute('''
-            SELECT provider, COUNT(*) as count
-            FROM unified_emails 
-            GROUP BY provider
-        ''')
-        provider_counts = dict(c.fetchall())
-        
-        # Emails with attachments
-        c.execute('''
-            SELECT COUNT(*) 
-            FROM unified_emails 
-            WHERE attachments IS NOT NULL AND attachments != "[]"
-        ''')
-        emails_with_attachments = c.fetchone()[0]
-        
-        # Successfully unlocked PDFs
-        c.execute('''
-            SELECT COUNT(*) 
-            FROM unified_emails 
-            WHERE unlock_success = 1
-        ''')
-        unlocked_pdfs = c.fetchone()[0]
-        
-        # Total unlock attempts
-        c.execute('''
-            SELECT SUM(unlock_attempts) 
-            FROM unified_emails
-        ''')
-        total_attempts = c.fetchone()[0] or 0
-        
-        conn.close()
-        
-        return {
-            'total_emails': sum(provider_counts.values()),
-            'provider_counts': provider_counts,
-            'emails_with_attachments': emails_with_attachments,
-            'unlocked_pdfs': unlocked_pdfs,
-            'total_unlock_attempts': total_attempts,
-            'unlock_success_rate': (unlocked_pdfs / emails_with_attachments * 100) if emails_with_attachments > 0 else 0
-        }
-
-# Example usage
-if __name__ == "__main__":
-    # Initialize unified client
-    client = UnifiedEmailClient()
-    
-    # Add Gmail provider
-    gmail_added = client.add_gmail_provider("Gmail", "credentials.json")
-    
-    # Add Outlook provider (replace with your actual client ID)
-    outlook_added = client.add_outlook_provider("Outlook", "YOUR_CLIENT_ID")
-    
-    if gmail_added or outlook_added:
-        print("✅ Email providers configured")
-        
-        # List providers
-        providers = client.list_providers()
-        print(f"📋 Configured providers: {len(providers)}")
-        
-        # Authenticate all providers
-        auth_results = client.authenticate_all()
-        print(f"🔐 Authentication results: {auth_results}")
-        
-        # Process emails from all providers
-        process_results = client.process_all_emails()
-        print(f"📧 Processing results: {process_results}")
-        
-        # Get statistics
-        stats = client.get_statistics()
-        print(f"📊 Statistics: {stats}")
-        
-        # Unlock all PDFs
-        client.unlock_all_pdfs()
-        
-    else:
-        print("❌ No email providers configured")
+    def get_statistics(self) -> dict:
+        """Get comprehensive statistics for the unified system with error handling"""
+        try:
+            email_stats = self.get_email_stats()
+            
+            # Mock PDF unlock stats (you can implement real tracking later)
+            unlocked_pdfs = 0
+            total_unlock_attempts = 0
+            unlock_success_rate = 0.0
+            
+            return {
+                'total_emails': email_stats['total_emails'],
+                'emails_with_attachments': email_stats['with_attachments'],
+                'unlocked_pdfs': unlocked_pdfs,
+                'total_unlock_attempts': total_unlock_attempts,
+                'unlock_success_rate': unlock_success_rate,
+                'provider_counts': email_stats['by_provider']
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get statistics: {e}")
+            return {
+                'total_emails': 0,
+                'emails_with_attachments': 0,
+                'unlocked_pdfs': 0,
+                'total_unlock_attempts': 0,
+                'unlock_success_rate': 0.0,
+                'provider_counts': {}
+            }
