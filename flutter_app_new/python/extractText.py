@@ -3,11 +3,9 @@ import pytesseract
 from PIL import Image
 import io
 import os
+from bs4 import BeautifulSoup
 
-# Optional: set tesseract path manually
-# pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'  # Linux
-# pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'  # Windows
-
+# PDF text extraction (with OCR fallback)
 def extract_text_from_pdf(pdf_path):
     doc = fitz.open(pdf_path)
     all_text = []
@@ -34,6 +32,26 @@ def extract_text_from_pdf(pdf_path):
 
     return "\n".join(all_text)
 
+# HTML text extraction
+def extract_text_from_html(html_path):
+    with open(html_path, "r", encoding="utf-8") as f:
+        html_content = f.read()
+
+    soup = BeautifulSoup(html_content, "html.parser")
+
+    text = soup.get_text(separator="\n", strip=True)
+    return text
+
+# Main extraction dispatcher based on file extension
+def extract_text_from_file(file_path):
+    ext = os.path.splitext(file_path)[1].lower()
+    if ext == ".pdf":
+        return extract_text_from_pdf(file_path)
+    elif ext in [".html", ".htm"]:
+        return extract_text_from_html(file_path)
+    else:
+        print(f"Unsupported file type: {file_path}")
+        return ""
 
 def extract_from_folder(folder_path, output_folder=None):
     if output_folder is None:
@@ -42,10 +60,10 @@ def extract_from_folder(folder_path, output_folder=None):
         os.makedirs(output_folder)
 
     for filename in os.listdir(folder_path):
-        if filename.lower().endswith(".pdf"):
-            pdf_path = os.path.join(folder_path, filename)
+        if filename.lower().endswith((".pdf", ".html", ".htm")):
+            file_path = os.path.join(folder_path, filename)
             print(f"Processing: {filename}")
-            text = extract_text_from_pdf(pdf_path)
+            text = extract_text_from_file(file_path)
 
             base_name = os.path.splitext(filename)[0]
             output_path = os.path.join(output_folder, f"{base_name}.txt")
@@ -53,8 +71,6 @@ def extract_from_folder(folder_path, output_folder=None):
                 f.write(text)
             print(f"Saved to: {output_path}")
 
-
-# Example usage
 if __name__ == "__main__":
-    folder_with_pdfs = "/src/flutter_app_new/python/assets"  # Change to your actual folder
-    extract_from_folder(folder_with_pdfs)
+    folder_with_files = "/src/flutter_app_new/python/assets"  # Change this to your folder
+    extract_from_folder(folder_with_files)

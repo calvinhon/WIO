@@ -4,7 +4,7 @@ DOCKERFILE_DIR=.
 DOCKERFILE_HASH_FILE="$DOCKERFILE_DIR/.dockerfile_hash"
 IMAGE_NAME="flutter-dev"
 PROJECT_DIR="$PWD"
-APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
+APK_PATH="flutter_app_new/build/app/outputs/flutter-apk/app-release.apk"
 
 # Only try to start Docker Desktop if on macOS
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -66,3 +66,10 @@ if command -v adb >/dev/null 2>&1; then
 else
   echo "ADB not found on host. Please install Android platform tools to enable device installation."
 fi
+
+# Always open an interactive shell in the container with project mounted
+echo "Opening interactive shell inside the container..."
+docker run --rm -it \
+  -v "$PROJECT_DIR":/src -w /src \
+  $IMAGE_NAME \
+  bash

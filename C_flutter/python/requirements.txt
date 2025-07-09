@@ -1,6 +1,0 @@
-PyMuPDF
-pytesseract
-Pillow
-beautifulsoup4
-lxml
-html5lib
