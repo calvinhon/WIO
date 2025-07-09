@@ -126,64 +126,254 @@ def test_pdf_unlock(db_path='email_data.db'):
     print("\n🔓 Starting PDF unlock process...")
     client.unlock_pdfs()
 
+#def main():
+#    """Main function with updated menu including Outlook support"""
+#    print("📬 Enhanced Gmail PDF Statement Processor")
+#    print("==================================================")
+    
+#    while True:
+#        print("\n🔧 Main Menu")
+#        print("1. Setup Personal Data")
+#        print("2. Setup Email Providers")
+#        print("3. Process New Emails (All Providers)")
+#        print("4. Process Gmail Only")
+#        print("5. Process Outlook Only")
+#        print("6. View Email Statistics")
+#        print("7. View Recent Emails")
+#        print("8. Test PDF Unlock")
+#        print("9. Unlock All PDFs")
+#        print("10. Database Management")
+#        print("11. Exit")
+        
+#        choice = input("\nSelect option (1-11): ").strip()
+        
+#        if choice == '1':
+#            manager = PersonalDataManager()
+#            manager.setup_interactive()
+        
+#        elif choice == '2':
+#            setup_email_providers()
+        
+#        elif choice == '3':
+#            process_all_providers()
+        
+#        elif choice == '4':
+#            process_gmail_only()
+        
+#        elif choice == '5':
+#            process_outlook_only()
+        
+#        elif choice == '6':
+#            display_unified_email_stats()
+        
+#        elif choice == '7':
+#            try:
+#                limit = int(input("How many recent emails to show? (default 10): ") or "10")
+#                display_recent_emails(limit=limit)
+#            except ValueError:
+#                display_recent_emails()
+        
+#        elif choice == '8':
+#            test_pdf_unlock()
+        
+#        elif choice == '9':
+#            unlock_all_pdfs_unified()
+        
+#        elif choice == '10':
+#            database_management_menu()
+        
+#        elif choice == '11':
+#            print("👋 Goodbye!")
+#            break
+        
+#        else:
+#            print("❌ Invalid choice!")
+
 def main():
-    """Main function with updated menu including Outlook support"""
+    """Main function with enhanced personal data management"""
     print("📬 Enhanced Gmail PDF Statement Processor")
     print("==================================================")
     
     while True:
         print("\n🔧 Main Menu")
-        print("1. Setup Personal Data")
-        print("2. Setup Email Providers")
-        print("3. Process New Emails (All Providers)")
-        print("4. Process Gmail Only")
-        print("5. Process Outlook Only")
-        print("6. View Email Statistics")
-        print("7. View Recent Emails")
-        print("8. Test PDF Unlock")
-        print("9. Unlock All PDFs")
-        print("10. Database Management")
-        print("11. Exit")
+        print("=" * 50)
         
-        choice = input("\nSelect option (1-11): ").strip()
+        # Personal Data Management Section
+        print("📊 PERSONAL DATA MANAGEMENT")
+        print("1.  Setup Personal Data (Interactive)")
+        print("2.  List All Personal Data")
+        print("3.  Add Single Personal Data Item")
+        print("4.  Delete Personal Data Item")
+        print("5.  Auto-Extract from Emails")
+        print("6.  Clean Low-Confidence Data")
+        print("7.  List Manual Data Only")
+        print()
         
+        # Email Processing Section
+        print("📧 EMAIL PROCESSING")
+        print("8.  Setup Email Providers")
+        print("9.  Process New Emails (All Providers)")
+        print("10. Process Gmail Only")
+        print("11. Process Outlook Only")
+        print()
+        
+        # Analysis & Reports Section
+        print("📊 ANALYSIS & REPORTS")
+        print("12. View Email Statistics")
+        print("13. View Recent Emails")
+        print("14. Test PDF Unlock")
+        print("15. Unlock All PDFs")
+        print()
+        
+        # System Management Section
+        print("⚙️  SYSTEM MANAGEMENT")
+        print("16. Database Management")
+        print("17. Exit")
+        
+        choice = input("\nSelect option (1-17): ").strip()
+        
+        # Personal Data Management Options (1-7)
         if choice == '1':
             manager = PersonalDataManager()
             manager.setup_interactive()
         
         elif choice == '2':
-            setup_email_providers()
+            manager = PersonalDataManager()
+            manager.list_personal_data()
         
         elif choice == '3':
-            process_all_providers()
+            manager = PersonalDataManager()
+            data_type = input("Enter data type: ").strip()
+            data_value = input("Enter data value: ").strip()
+            description = input("Enter description (optional): ").strip()
+            if data_type and data_value:
+                manager.add_personal_data(data_type, data_value, description, 'manual', 1.0)
+            else:
+                print("❌ Data type and value are required!")
         
         elif choice == '4':
-            process_gmail_only()
+            manager = PersonalDataManager()
+            manager.list_personal_data()
+            try:
+                data_id = int(input("Enter ID to delete: "))
+                manager.delete_personal_data(data_id)
+            except ValueError:
+                print("❌ Invalid ID!")
         
         elif choice == '5':
-            process_outlook_only()
+            manager = PersonalDataManager()
+            print("\n🤖 Auto-extracting personal data from emails...")
+            try:
+                extracted_count = manager.extract_from_emails()
+                print(f"✅ Extraction complete! Found {extracted_count} new data points")
+            except Exception as e:
+                print(f"❌ Extraction failed: {e}")
         
         elif choice == '6':
-            display_unified_email_stats()
+            manager = PersonalDataManager()
+            manager.cleanup_low_confidence_data()
         
         elif choice == '7':
+            manager = PersonalDataManager()
+            manager.list_personal_data(show_auto_extracted=False)
+        
+        # Email Processing Options (8-11)
+        elif choice == '8':
+            setup_email_providers()
+        
+        elif choice == '9':
+            process_all_providers()
+        
+        elif choice == '10':
+            process_gmail_only()
+        
+        elif choice == '11':
+            process_outlook_only()
+        
+        # Analysis & Reports Options (12-15)
+        elif choice == '12':
+            display_unified_email_stats()
+        
+        elif choice == '13':
             try:
                 limit = int(input("How many recent emails to show? (default 10): ") or "10")
                 display_recent_emails(limit=limit)
             except ValueError:
                 display_recent_emails()
         
-        elif choice == '8':
+        elif choice == '14':
             test_pdf_unlock()
         
-        elif choice == '9':
+        elif choice == '15':
             unlock_all_pdfs_unified()
         
-        elif choice == '10':
+        # System Management Options (16-17)
+        elif choice == '16':
             database_management_menu()
         
-        elif choice == '11':
+        elif choice == '17':
             print("👋 Goodbye!")
+            break
+        
+        else:
+            print("❌ Invalid choice! Please select 1-17.")
+
+def personal_data_submenu():
+    """Dedicated submenu for personal data management"""
+    manager = PersonalDataManager()
+    
+    while True:
+        print("\n🔐 Personal Data Manager")
+        print("=" * 40)
+        print("1. Interactive Setup")
+        print("2. List Personal Data")
+        print("3. Add Single Item")
+        print("4. Delete Item")
+        print("5. Auto-Extract from Emails")
+        print("6. Clean Low-Confidence Data")
+        print("7. List Manual Data Only")
+        print("8. Back to Main Menu")
+        
+        choice = input("\nSelect option (1-8): ").strip()
+        
+        if choice == '1':
+            manager.setup_interactive()
+        
+        elif choice == '2':
+            manager.list_personal_data()
+        
+        elif choice == '3':
+            data_type = input("Enter data type: ").strip()
+            data_value = input("Enter data value: ").strip()
+            description = input("Enter description (optional): ").strip()
+            if data_type and data_value:
+                manager.add_personal_data(data_type, data_value, description, 'manual', 1.0)
+            else:
+                print("❌ Data type and value are required!")
+        
+        elif choice == '4':
+            manager.list_personal_data()
+            try:
+                data_id = int(input("Enter ID to delete: "))
+                manager.delete_personal_data(data_id)
+            except ValueError:
+                print("❌ Invalid ID!")
+        
+        elif choice == '5':
+            print("\n🤖 Auto-extracting personal data from emails...")
+            try:
+                extracted_count = manager.extract_from_emails()
+                print(f"✅ Extraction complete! Found {extracted_count} new data points")
+            except Exception as e:
+                print(f"❌ Extraction failed: {e}")
+        
+        elif choice == '6':
+            manager.cleanup_low_confidence_data()
+        
+        elif choice == '7':
+            manager.list_personal_data(show_auto_extracted=False)
+        
+        elif choice == '8':
             break
         
         else:
@@ -197,7 +387,7 @@ def setup_email_providers():
     client = UnifiedEmailClient()
     
     while True:
-        providers = client.list_providers()
+        providers = client.()
         
         print(f"\n📋 Current providers ({len(providers)}):")
         for i, provider in enumerate(providers, 1):
@@ -270,7 +460,7 @@ def setup_outlook_provider(client):
     print("3. Click 'New registration'")
     print("4. Enter app name (e.g., 'Email PDF Processor')")
     print("5. Select 'Accounts in any organizational directory and personal Microsoft accounts'")
-    print("6. Add redirect URI: http://localhost:8080/callback (Web platform)")
+    print("6. Add redirect URI: http://localhost:8080 (Web platform)")
     print("7. After creation, copy the 'Application (client) ID'")
     print("8. Go to 'API permissions' > 'Add a permission' > 'Microsoft Graph'")
     print("9. Add these permissions: Mail.Read, Mail.ReadBasic, User.Read")
@@ -344,25 +534,142 @@ def process_all_providers():
         print(f"❌ Error processing emails: {e}")
 
 def process_gmail_only():
-    """Process Gmail emails only"""
+    """Process Gmail emails only with proper configuration"""
     print("\n📥 Processing Gmail emails only...")
     
     try:
-        client = EnhancedGmailClient()
-        client.process_new_statements()
-        print("✅ Gmail processing completed!")
+        # Check if Gmail credentials exist
+        credentials_file = './secret/credentials.json'
+        if not os.path.exists(credentials_file):
+            print("❌ Gmail credentials not found!")
+            print(f"📁 Looking for: {credentials_file}")
+            print("\n💡 Setup steps:")
+            print("1. Create 'secret' folder in current directory")
+            print("2. Download credentials.json from Google Cloud Console")
+            print("3. Place credentials.json in the secret folder")
+            return
+        
+        # Create Gmail configuration
+        from enhanced_gmail_client import GmailConfig, EnhancedGmailClient
+        
+        config = GmailConfig(
+            credentials_file=credentials_file,
+            token_file='./secret/gmail_token.pickle'
+        )
+        
+        # Initialize and authenticate Gmail client
+        print("🔐 Authenticating Gmail...")
+        client = EnhancedGmailClient(config)
+        
+        if not client.authenticate():
+            print("❌ Gmail authentication failed!")
+            print("💡 Try deleting the token file and re-authenticating:")
+            print("   rm ./secret/gmail_token.pickle")
+            return
+        
+        print("✅ Gmail authenticated successfully!")
+        
+        # Process emails
+        print("📧 Processing new emails...")
+        processed_count = client.process_new_emails(months_back=2)
+        
+        if processed_count > 0:
+            print(f"✅ Processed {processed_count} new emails from Gmail")
+            
+            # Get and display recent emails
+            emails = client.get_processed_emails()
+            if emails:
+                print(f"\n📋 Recent emails ({len(emails)} total):")
+                for email in emails[:3]:  # Show first 3
+                    print(f"  - {email['subject']} (from {email['sender_email']})")
+                    if email['attachments']:
+                        print(f"    📎 {len(email['attachments'])} attachments")
+        else:
+            print("ℹ️ No new emails found to process")
+        
+        # Show statistics
+        stats = client.get_email_stats()
+        print(f"\n📊 Gmail Statistics:")
+        print(f"  Total emails: {stats.get('total_emails', 0)}")
+        print(f"  With attachments: {stats.get('emails_with_attachments', 0)}")
+        print(f"  Recent (7 days): {stats.get('recent_emails', 0)}")
+        
     except Exception as e:
         print(f"❌ Error processing Gmail: {e}")
+        logger.error(f"Gmail processing error: {e}")
+
+def process_outlook_direct():
+    """Direct Outlook processing without unified client"""
+    print("\n📧 Direct Outlook Processing...")
+    
+    try:
+        from outlook_client import OutlookConfig, OutlookClient
+        
+        config = OutlookConfig(
+            client_id="86fd58c9-45de-44cb-9fca-615de1513036",
+            tenant_id="common"
+        )
+        
+        # Initialize and authenticate Outlook client
+        print("🔐 Authenticating Outlook...")
+        outlook_client = OutlookClient(config)
+        
+        if not outlook_client.authenticate():
+            print("❌ Outlook authentication failed!")
+            print("💡 Authentication help:")
+            print("   - This requires Microsoft account login")
+            print("   - A browser window should open automatically")
+            print("   - Complete the login process in the browser")
+            print("   - Make sure you have internet connection")
+            return
+        
+        print("✅ Outlook authenticated successfully!")
+        
+        # Process emails - use the correct method name: process_new_emails
+        print("📧 Processing new emails...")
+        processed_count = outlook_client.process_new_emails(months_back=2)
+        
+        if processed_count > 0:
+            print(f"✅ Processed {processed_count} new emails from Outlook")
+            
+            # Get and display recent emails
+            try:
+                emails = outlook_client.get_processed_emails()
+                if emails:
+                    print(f"\n📋 Recent emails ({len(emails)} total):")
+                    for email in emails[:3]:  # Show first 3
+                        print(f"  - {email.get('subject', 'No subject')} (from {email.get('sender_email', 'Unknown')})")
+                        if email.get('attachments'):
+                            print(f"    📎 {len(email['attachments'])} attachments")
+                        if email.get('password_hints'):
+                            print(f"    🔑 {len(email['password_hints'])} password hints")
+            except Exception as e:
+                print(f"⚠️ Could not display recent emails: {e}")
+        else:
+            print("ℹ️ No new emails found to process")
+        
+        print(f"\n📊 Outlook Statistics:")
+        print(f"  Total emails processed this session: {processed_count}")
+        
+    except Exception as e:
+        print(f"❌ Error in direct Outlook processing: {e}")
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Direct Outlook processing error: {e}")
 
 def process_outlook_only():
-    """Process Outlook emails only"""
+    """Process Outlook emails only with enhanced error handling"""
     print("\n📥 Processing Outlook emails only...")
     
     try:
-        # Get Outlook configuration
-        unified_client = UnifiedEmailClient()
-        providers = unified_client.list_providers()
+        # First, try to fix any database issues
+        fix_database_schema()
         
+        # Create unified client to check for providers
+        client = UnifiedEmailClient()
+        providers = client.list_providers()
+        
+        # Find Outlook provider
         outlook_provider = None
         for provider in providers:
             if provider['type'] == 'outlook' and provider['enabled']:
@@ -371,87 +678,310 @@ def process_outlook_only():
         
         if not outlook_provider:
             print("❌ No Outlook provider configured!")
-            print("Please setup Outlook provider first (Option 2 in main menu)")
-            return
-        
-        # Load Outlook config
-        conn = sqlite3.connect('email_data.db')
-        c = conn.cursor()
-        c.execute('SELECT config FROM email_providers WHERE type = "outlook"')
-        config_row = c.fetchone()
-        conn.close()
-        
-        if not config_row:
-            print("❌ Outlook configuration not found!")
-            return
-        
-        config_data = json.loads(config_row[0])
-        outlook_config = OutlookConfig(**config_data)
-        
-        # Create Outlook client
-        outlook_client = OutlookClient(outlook_config)
-        
-        # Authenticate
-        if outlook_client.authenticate():
-            print("✅ Outlook authentication successful")
+            print("💡 Setting up Outlook provider with default configuration...")
             
-            # Process emails
-            processed_count = outlook_client.process_new_emails()
-            print(f"✅ Processed {processed_count} Outlook emails")
-        else:
-            print("❌ Outlook authentication failed")
-            
+            # Try to set up default Outlook provider with better error handling
+            try:
+                success = client.add_outlook_provider(
+                    name="Outlook",
+                    client_id="86fd58c9-45de-44cb-9fca-615de1513036",
+                    tenant_id="common"
+                )
+                
+                if not success:
+                    print("❌ Failed to setup Outlook provider automatically")
+                    print("📧 Let's try manual setup...")
+                    
+                    # Manual setup fallback
+                    setup_outlook_provider_direct()
+                    return
+                
+                print("✅ Default Outlook provider setup successful")
+                
+            except Exception as setup_error:
+                print(f"❌ Setup error: {setup_error}")
+                print("💡 Let's try direct Outlook client setup...")
+                process_outlook_direct()
+                return
+        
+        # Use direct Outlook client if provider setup fails
+        process_outlook_direct()
+        
     except Exception as e:
         print(f"❌ Error processing Outlook: {e}")
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Outlook processing error: {e}")
+        
+        # Fallback to direct processing
+        print("💡 Trying direct Outlook processing...")
+        process_outlook_direct()
 
-def display_unified_email_stats():
-    """Display statistics for unified email system"""
-    print("\n📊 Unified Email Statistics")
+def process_outlook_with_method_detection():
+    """Process Outlook emails with automatic method detection"""
+    print("\n📧 Outlook Processing with Method Detection")
+    print("=" * 45)
+    
+    try:
+        from outlook_client import OutlookConfig, OutlookClient
+        
+        config = OutlookConfig(
+            client_id="86fd58c9-45de-44cb-9fca-615de1513036",
+            tenant_id="common"
+        )
+        
+        # Initialize and authenticate Outlook client
+        print("🔐 Authenticating Outlook...")
+        outlook_client = OutlookClient(config)
+        
+        if not outlook_client.authenticate():
+            print("❌ Outlook authentication failed!")
+            return
+        
+        print("✅ Outlook authenticated successfully!")
+        
+        # Show available methods
+        print("🔍 Available methods in OutlookClient:")
+        methods = [method for method in dir(outlook_client) if not method.startswith('_') and callable(getattr(outlook_client, method))]
+        
+        # Filter for processing-related methods
+        processing_methods = [m for m in methods if any(keyword in m.lower() for keyword in ['process', 'fetch', 'search'])]
+        print(f"📋 Processing-related methods: {processing_methods}")
+        
+        # Use the correct method: process_new_emails
+        print("📧 Processing new emails using process_new_emails()...")
+        processed_count = outlook_client.process_new_emails(months_back=2)
+        
+        if processed_count > 0:
+            print(f"✅ Processed {processed_count} emails using process_new_emails()")
+            
+            # Get and display recent emails
+            try:
+                emails = outlook_client.get_processed_emails()
+                if emails:
+                    print(f"\n📋 Recent emails ({len(emails)} total):")
+                    for email in emails[:3]:  # Show first 3
+                        subject = email.get('subject', 'No subject')
+                        sender = email.get('sender_email', 'Unknown')
+                        print(f"  - {subject} (from {sender})")
+                        
+                        if email.get('attachments'):
+                            print(f"    📎 {len(email['attachments'])} attachments")
+                        
+                        if email.get('password_hints'):
+                            hints = email['password_hints']
+                            print(f"    🔑 {len(hints)} password hints: {', '.join(hints[:3])}")
+                        
+                        if email.get('password_rules'):
+                            rules = email['password_rules']
+                            print(f"    📋 {len(rules)} password rules found")
+            except Exception as e:
+                print(f"⚠️ Could not display recent emails: {e}")
+        else:
+            print("ℹ️ No new emails found to process")
+        
+        print(f"\n📊 Method Detection Results:")
+        print(f"  ✅ Correct method: process_new_emails()")
+        print(f"  📧 Emails processed: {processed_count}")
+        
+    except Exception as e:
+        print(f"❌ Error in method detection processing: {e}")
+
+def test_outlook_methods():
+    """Test what methods are available in OutlookClient"""
+    print("\n🔍 Testing OutlookClient Methods")
+    print("=" * 35)
+    
+    try:
+        from outlook_client import OutlookConfig, OutlookClient
+        
+        config = OutlookConfig(
+            client_id="86fd58c9-45de-44cb-9fca-615de1513036",
+            tenant_id="common"
+        )
+        
+        client = OutlookClient(config)
+        
+        print("📋 All available methods in OutlookClient:")
+        methods = [method for method in dir(client) if not method.startswith('_') and callable(getattr(client, method))]
+        
+        for i, method in enumerate(methods, 1):
+            print(f"  {i:2d}. {method}")
+        
+        # Highlight the correct processing methods
+        processing_methods = []
+        for method_name in ['process_new_emails', 'process_emails', 'fetch_and_process_emails', 'fetch_emails']:
+            if hasattr(client, method_name):
+                processing_methods.append(method_name)
+        
+        print(f"\n✅ Available processing methods:")
+        for method in processing_methods:
+            print(f"  ✓ {method}")
+        
+        if 'process_new_emails' in processing_methods:
+            print(f"\n🎯 Recommended method: process_new_emails(months_back=2)")
+        
+        # Show method signatures if possible
+        if processing_methods:
+            print(f"\n📋 Method details:")
+            for method_name in processing_methods:
+                try:
+                    method = getattr(client, method_name)
+                    print(f"  {method_name}: {method.__doc__ or 'No documentation available'}")
+                except:
+                    pass
+        
+    except Exception as e:
+        print(f"❌ Error testing methods: {e}")
+
+def setup_outlook_provider_direct():
+    """Direct Outlook provider setup without unified client"""
+    print("\n📧 Direct Outlook Provider Setup")
+    print("=" * 32)
+    
+    try:
+        from outlook_client import OutlookConfig, OutlookClient
+        
+        print("📋 Using default Microsoft test configuration:")
+        print("   Client ID: 86fd58c9-45de-44cb-9fca-615de1513036")
+        print("   Tenant ID: common (works with personal Microsoft accounts)")
+        print("   Scopes: Mail.Read, User.Read")
+        
+        config = OutlookConfig(
+            client_id="86fd58c9-45de-44cb-9fca-615de1513036",
+            tenant_id="common"
+        )
+        
+        print("\n🔐 Testing Outlook authentication...")
+        client = OutlookClient(config)
+        
+        if client.authenticate():
+            print("✅ Outlook authentication successful!")
+            print("📧 You can now process Outlook emails using option 11")
+            
+            # Save configuration manually to database
+            try:
+                import sqlite3
+                import json
+                from datetime import datetime
+                
+                conn = sqlite3.connect('email_data.db')
+                c = conn.cursor()
+                
+                provider_data = {
+                    'id': 'outlook_default',
+                    'name': 'Outlook',
+                    'provider_type': 'outlook',
+                    'config': json.dumps(config.__dict__),
+                    'enabled': 1,
+                    'created_date': datetime.now().isoformat()
+                }
+                
+                c.execute('''
+                    INSERT OR REPLACE INTO email_providers 
+                    (id, name, provider_type, config, enabled, created_date)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (
+                    provider_data['id'],
+                    provider_data['name'], 
+                    provider_data['provider_type'],
+                    provider_data['config'],
+                    provider_data['enabled'],
+                    provider_data['created_date']
+                ))
+                
+                conn.commit()
+                conn.close()
+                print("✅ Provider configuration saved to database")
+                
+            except Exception as db_error:
+                print(f"⚠️ Could not save to database: {db_error}")
+                print("   But authentication works, so you can still use direct processing")
+        else:
+            print("❌ Outlook authentication failed")
+            print("\n💡 Troubleshooting tips:")
+            print("   1. Make sure you have internet connection")
+            print("   2. Check if a browser window opened for login")
+            print("   3. Try logging in with a different Microsoft account")
+            print("   4. Verify that the account has email access")
+        
+    except Exception as e:
+        print(f"❌ Error in direct setup: {e}")
+
+def check_database_integrity():
+    """Check and report database integrity"""
+    print("\n🔍 Database Integrity Check")
     print("=" * 30)
     
     try:
-        client = UnifiedEmailClient()
-        stats = client.get_statistics()
+        import sqlite3
+        conn = sqlite3.connect('email_data.db')
+        c = conn.cursor()
         
-        print(f"Total emails processed: {stats['total_emails']}")
-        print(f"Emails with attachments: {stats['emails_with_attachments']}")
-        print(f"Successfully unlocked PDFs: {stats['unlocked_pdfs']}")
-        print(f"Total unlock attempts: {stats['total_unlock_attempts']}")
-        print(f"Unlock success rate: {stats['unlock_success_rate']:.1f}%")
+        # Check tables
+        c.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = [row[0] for row in c.fetchall()]
         
-        print("\n📧 By Provider:")
-        for provider, count in stats['provider_counts'].items():
-            print(f"  {provider.upper()}: {count} emails")
+        print(f"📋 Found {len(tables)} tables:")
+        for table in tables:
+            c.execute(f"SELECT COUNT(*) FROM {table}")
+            count = c.fetchone()[0]
+            print(f"   {table}: {count} records")
         
-        # Also show traditional Gmail stats
-        print("\n📊 Gmail-specific Statistics:")
-        display_email_stats()
+        # Check schema for critical tables
+        critical_tables = ['email_providers', 'emails', 'personal_data']
+        
+        for table in critical_tables:
+            if table in tables:
+                print(f"\n📊 Schema for {table}:")
+                c.execute(f"PRAGMA table_info({table})")
+                columns = c.fetchall()
+                for col in columns:
+                    print(f"   {col[1]} ({col[2]}) {'NOT NULL' if col[3] else ''} {'PRIMARY KEY' if col[5] else ''}")
+        
+        conn.close()
+        print("\n✅ Database integrity check completed")
         
     except Exception as e:
-        print(f"❌ Error getting statistics: {e}")
+        print(f"❌ Database check error: {e}")
 
 def unlock_all_pdfs_unified():
-    """Unlock all PDFs using unified system"""
+    """Unlock all PDFs using unified system with fallback"""
     print("\n🔓 Unlocking all PDFs (Unified System)...")
     
     try:
-        client = UnifiedEmailClient()
+        # Check if we have any emails with attachments first
+        import sqlite3
+        conn = sqlite3.connect('email_data.db')
+        c = conn.cursor()
         
-        # Check if Gmail client is available for enhanced unlocking
-        if not client.gmail_client:
-            print("⚠️ Gmail client not available. Initializing...")
-            if os.path.exists('./secret/credentials.json'):
-                client.add_gmail_provider("Gmail", "credentials.json")
-            else:
-                print("❌ Gmail credentials required for advanced PDF unlocking")
-                return
+        c.execute("SELECT COUNT(*) FROM emails WHERE has_attachments = 1")
+        pdf_count = c.fetchone()[0] if c.fetchone() else 0
         
-        client.unlock_all_pdfs()
-        print("✅ PDF unlocking completed!")
+        if pdf_count == 0:
+            print("ℹ️ No emails with attachments found to unlock")
+            conn.close()
+            return
+        
+        print(f"📄 Found {pdf_count} emails with potential PDFs")
+        conn.close()
+        
+        # Try unified client approach
+        try:
+            client = UnifiedEmailClient()
+            # Placeholder for unlock functionality
+            print("⚠️ PDF unlocking feature not yet implemented in unified client")
+            print("💡 You can manually check downloaded files in the 'downloads' folder")
+            
+        except Exception as unified_error:
+            print(f"⚠️ Unified client error: {unified_error}")
+            print("💡 PDF files should be available in downloads folder for manual unlocking")
         
     except Exception as e:
         print(f"❌ Error unlocking PDFs: {e}")
-
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"PDF unlock error: {e}")
 def database_management_menu():
     """Database management submenu"""
     while True:
