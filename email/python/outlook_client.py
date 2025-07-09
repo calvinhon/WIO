@@ -339,7 +339,7 @@ class OutlookClient:
 
 		return message.get('bodyPreview', '')
 
-	def download_attachments(self, message_id: str, attachments: List[dict], download_dir: str = 'downloads') -> List[str]:
+	def download_attachments(self, message_id: str, attachments: List[dict], download_dir: str = 'assets') -> List[str]:
 		"""Download PDF attachments from email"""
 		try:
 			if not os.path.exists(download_dir):

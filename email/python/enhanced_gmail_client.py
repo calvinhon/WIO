@@ -310,7 +310,7 @@ class EnhancedGmailClient:
             logger.error(f"Failed to extract email body: {e}")
             return message.get('snippet', '')
     
-    def download_attachments(self, message_id: str, message: dict, download_dir: str = 'downloads') -> List[str]:
+    def download_attachments(self, message_id: str, message: dict, download_dir: str = 'assets') -> List[str]:
         """Download PDF attachments from Gmail message"""
         try:
             if not os.path.exists(download_dir):
