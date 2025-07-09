@@ -4,6 +4,9 @@ google-auth-oauthlib>=0.8.0
 google-auth-httplib2>=0.1.0
 google-api-python-client>=2.0.0
 
+# Microsoft Authentication Library
+msal
+
 # PDF processing
 pikepdf>=6.0.0
 
