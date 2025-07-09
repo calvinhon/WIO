@@ -267,7 +267,7 @@ class OutlookClient:
 			date_filter = past_date.strftime('%Y-%m-%dT%H:%M:%SZ')
 
 			# Step 2: Bank-related keywords
-			keywords = ["statement", "account", "credit card", "bank", "e-statement"]
+			keywords = ["credit card", "account statement", "bank statement"]
 
 			# Step 3: Previously processed IDs
 			conn = sqlite3.connect(self.db_path)
@@ -348,8 +348,12 @@ class OutlookClient:
 			downloaded_files = []
 
 			for attachment in attachments:
-				if (attachment.get('contentType') == 'application/pdf' or 
-					attachment.get('name', '').lower().endswith('.pdf')):
+				if (
+					attachment.get('contentType') == 'application/pdf' or 
+					attachment.get('name', '').lower().endswith('.pdf') or
+					attachment.get('contentType') == 'text/html' or
+					attachment.get('name', '').lower().endswith('.html')
+				):
 
 					try:
 						# Get attachment content

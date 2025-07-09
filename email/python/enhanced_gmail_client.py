@@ -211,7 +211,7 @@ class EnhancedGmailClient:
             date_str = past_date.strftime('%Y/%m/%d')
             
             # Bank-related keywords
-            keywords = ["statement", "account", "credit card", "bank", "e-statement"]
+            keywords = ["credit card", "account statement", "bank statement"]
             keyword_query = " OR ".join([f'"{kw}"' for kw in keywords])
             
             # Build Gmail search query
@@ -322,6 +322,8 @@ class EnhancedGmailClient:
                 for part in parts:
                     if part.get('filename'):
                         filename = part['filename']
+                        if not (filename.lower().endswith('.pdf') or filename.lower().endswith('.html')):
+                            continue
                         if filename.lower().endswith('.pdf'):
                             attachment_id = part['body'].get('attachmentId')
                             if attachment_id:
