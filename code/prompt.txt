@@ -1,0 +1,5 @@
+"You are an expert password analyst. Your task is to analyze bank statement emails and generate the most likely PDF password based on the provided information.
+Your password is Your year of birth, followed by the last four digits of your registered mobile number. For example, if your year of birth is 1980 and your mobile number is 050 123 4567, then your password will be 19804567. 
+name: Nguyen The Hoach
+phone number: 971525562885
+DOB:10031984"

@@ -2,6 +2,7 @@
 """
 Main Email Processing Script
 This script processes emails, extracts password rules, and unlocks PDFs.
+Supports both Gmail and Outlook email providers.
 """
 
 import sys
@@ -11,6 +12,8 @@ import sqlite3
 from datetime import datetime
 from enhanced_gmail_client import EnhancedGmailClient
 from personal_data_manager import PersonalDataManager
+from unified_email_client import UnifiedEmailClient
+from outlook_client import OutlookClient, OutlookConfig
 
 def display_email_stats(db_path='email_data.db'):
     """Display statistics about processed emails"""
@@ -124,71 +127,330 @@ def test_pdf_unlock(db_path='email_data.db'):
     client.unlock_pdfs()
 
 def main():
-    """Main function with interactive menu"""
+    """Main function with updated menu including Outlook support"""
     print("📬 Enhanced Gmail PDF Statement Processor")
-    print("=" * 50)
-    
-    # Check if credentials exist
-    if not os.path.exists('credentials.json'):
-        print("❌ credentials.json not found!")
-        print("Please download it from Google Cloud Console and place it in the current directory.")
-        return
+    print("==================================================")
     
     while True:
         print("\n🔧 Main Menu")
         print("1. Setup Personal Data")
-        print("2. Process New Emails")
-        print("3. View Email Statistics")
-        print("4. View Recent Emails")
-        print("5. Test PDF Unlock")
-        print("6. Unlock All PDFs")
-        print("7. Database Management")
-        print("8. Exit")
+        print("2. Setup Email Providers")
+        print("3. Process New Emails (All Providers)")
+        print("4. Process Gmail Only")
+        print("5. Process Outlook Only")
+        print("6. View Email Statistics")
+        print("7. View Recent Emails")
+        print("8. Test PDF Unlock")
+        print("9. Unlock All PDFs")
+        print("10. Database Management")
+        print("11. Exit")
         
-        choice = input("\nSelect option (1-8): ").strip()
+        choice = input("\nSelect option (1-11): ").strip()
         
         if choice == '1':
             manager = PersonalDataManager()
             manager.setup_interactive()
         
         elif choice == '2':
-            print("\n📥 Processing new emails...")
-            try:
-                client = EnhancedGmailClient()
-                client.process_new_statements()
-            except Exception as e:
-                print(f"❌ Error processing emails: {e}")
+            setup_email_providers()
         
         elif choice == '3':
-            display_email_stats()
+            process_all_providers()
         
         elif choice == '4':
+            process_gmail_only()
+        
+        elif choice == '5':
+            process_outlook_only()
+        
+        elif choice == '6':
+            display_unified_email_stats()
+        
+        elif choice == '7':
             try:
                 limit = int(input("How many recent emails to show? (default 10): ") or "10")
                 display_recent_emails(limit=limit)
             except ValueError:
                 display_recent_emails()
         
-        elif choice == '5':
+        elif choice == '8':
             test_pdf_unlock()
         
-        elif choice == '6':
-            print("\n🔓 Unlocking all PDFs...")
-            try:
-                client = EnhancedGmailClient()
-                client.unlock_pdfs()
-            except Exception as e:
-                print(f"❌ Error unlocking PDFs: {e}")
+        elif choice == '9':
+            unlock_all_pdfs_unified()
         
-        elif choice == '7':
+        elif choice == '10':
             database_management_menu()
         
-        elif choice == '8':
+        elif choice == '11':
             print("👋 Goodbye!")
             break
         
         else:
             print("❌ Invalid choice!")
+
+def setup_email_providers():
+    """Setup email providers (Gmail and Outlook)"""
+    print("\n📧 Email Provider Setup")
+    print("=" * 30)
+    
+    client = UnifiedEmailClient()
+    
+    while True:
+        providers = client.list_providers()
+        
+        print(f"\n📋 Current providers ({len(providers)}):")
+        for i, provider in enumerate(providers, 1):
+            status = "✅ Enabled" if provider['enabled'] else "❌ Disabled"
+            print(f"{i}. {provider['name']} ({provider['type']}) - {status}")
+            print(f"   Last sync: {provider['last_sync'] or 'Never'}")
+            print(f"   Total emails: {provider['total_emails']}")
+        
+        print("\n🔧 Options:")
+        print("1. Add Gmail Provider")
+        print("2. Add Outlook Provider")
+        print("3. Test All Providers")
+        print("4. Back to Main Menu")
+        
+        choice = input("\nSelect option (1-4): ").strip()
+        
+        if choice == '1':
+            setup_gmail_provider(client)
+        
+        elif choice == '2':
+            setup_outlook_provider(client)
+        
+        elif choice == '3':
+            test_all_providers(client)
+        
+        elif choice == '4':
+            break
+        
+        else:
+            print("❌ Invalid choice!")
+
+def setup_gmail_provider(client):
+    """Setup Gmail provider"""
+    print("\n📧 Gmail Provider Setup")
+    print("=" * 25)
+    
+    credentials_file = input("Enter Gmail credentials file path (default: credentials.json): ").strip()
+    if not credentials_file:
+        credentials_file = "credentials.json"
+    
+    if not os.path.exists(credentials_file):
+        print(f"❌ Credentials file not found: {credentials_file}")
+        print("\n📋 To setup Gmail:")
+        print("1. Go to Google Cloud Console (https://console.cloud.google.com/)")
+        print("2. Create/select a project")
+        print("3. Enable Gmail API")
+        print("4. Create OAuth 2.0 credentials (Desktop application)")
+        print("5. Download credentials as credentials.json")
+        print("6. Place in the same directory as this script")
+        return
+    
+    success = client.add_gmail_provider("Gmail", credentials_file)
+    if success:
+        print("✅ Gmail provider added successfully!")
+        print("� You can now process Gmail emails")
+    else:
+        print("❌ Failed to add Gmail provider")
+
+def setup_outlook_provider(client):
+    """Setup Outlook provider"""
+    print("\n📧 Outlook Provider Setup")
+    print("=" * 27)
+    
+    print("📋 To setup Outlook, you need:")
+    print("1. Azure App Registration client ID")
+    print("2. Optional: Tenant ID (use 'common' for personal accounts)")
+    print("\n📋 Setup instructions:")
+    print("1. Go to Azure Portal (https://portal.azure.com/)")
+    print("2. Navigate to Azure Active Directory > App registrations")
+    print("3. Click 'New registration'")
+    print("4. Enter app name (e.g., 'Email PDF Processor')")
+    print("5. Select 'Accounts in any organizational directory and personal Microsoft accounts'")
+    print("6. Add redirect URI: http://localhost:8080/callback (Web platform)")
+    print("7. After creation, copy the 'Application (client) ID'")
+    print("8. Go to 'API permissions' > 'Add a permission' > 'Microsoft Graph'")
+    print("9. Add these permissions: Mail.Read, Mail.ReadBasic, User.Read")
+    print("10. Grant admin consent if required")
+    
+    client_id = input("\nEnter Outlook Client ID: ").strip()
+    if not client_id:
+        client_id = "86fd58c9-45de-44cb-9fca-615de1513036"
+        print(f"Using default Client ID: {client_id}")
+    
+    tenant_id = input("Enter Tenant ID (default: common): ").strip()
+    if not tenant_id:
+        tenant_id = "common"
+    
+    success = client.add_outlook_provider("Outlook", client_id, tenant_id)
+    if success:
+        print("✅ Outlook provider added successfully!")
+        print("📧 You can now process Outlook emails")
+    else:
+        print("❌ Failed to add Outlook provider")
+
+def test_all_providers(client):
+    """Test authentication for all providers"""
+    print("\n🔐 Testing Provider Authentication")
+    print("=" * 35)
+    
+    auth_results = client.authenticate_all()
+    
+    for provider, success in auth_results.items():
+        if success:
+            print(f"✅ {provider.upper()}: Authentication successful")
+        else:
+            print(f"❌ {provider.upper()}: Authentication failed")
+    
+    if any(auth_results.values()):
+        print("\n✅ At least one provider is working!")
+    else:
+        print("\n❌ No providers are working. Please check your setup.")
+
+def process_all_providers():
+    """Process emails from all enabled providers"""
+    print("\n📥 Processing emails from all providers...")
+    
+    try:
+        client = UnifiedEmailClient()
+        
+        # Authenticate all providers
+        print("🔐 Authenticating providers...")
+        auth_results = client.authenticate_all()
+        
+        working_providers = [p for p, success in auth_results.items() if success]
+        
+        if not working_providers:
+            print("❌ No providers authenticated successfully!")
+            return
+        
+        print(f"✅ Authenticated: {', '.join(working_providers)}")
+        
+        # Process emails
+        print("📧 Processing emails...")
+        process_results = client.process_all_emails()
+        
+        print("\n📊 Processing Results:")
+        for provider, count in process_results.items():
+            print(f"  {provider.upper()}: {count} emails processed")
+        
+        total_processed = sum(process_results.values())
+        print(f"\n✅ Total: {total_processed} emails processed")
+        
+    except Exception as e:
+        print(f"❌ Error processing emails: {e}")
+
+def process_gmail_only():
+    """Process Gmail emails only"""
+    print("\n📥 Processing Gmail emails only...")
+    
+    try:
+        client = EnhancedGmailClient()
+        client.process_new_statements()
+        print("✅ Gmail processing completed!")
+    except Exception as e:
+        print(f"❌ Error processing Gmail: {e}")
+
+def process_outlook_only():
+    """Process Outlook emails only"""
+    print("\n📥 Processing Outlook emails only...")
+    
+    try:
+        # Get Outlook configuration
+        unified_client = UnifiedEmailClient()
+        providers = unified_client.list_providers()
+        
+        outlook_provider = None
+        for provider in providers:
+            if provider['type'] == 'outlook' and provider['enabled']:
+                outlook_provider = provider
+                break
+        
+        if not outlook_provider:
+            print("❌ No Outlook provider configured!")
+            print("Please setup Outlook provider first (Option 2 in main menu)")
+            return
+        
+        # Load Outlook config
+        conn = sqlite3.connect('email_data.db')
+        c = conn.cursor()
+        c.execute('SELECT config FROM email_providers WHERE type = "outlook"')
+        config_row = c.fetchone()
+        conn.close()
+        
+        if not config_row:
+            print("❌ Outlook configuration not found!")
+            return
+        
+        config_data = json.loads(config_row[0])
+        outlook_config = OutlookConfig(**config_data)
+        
+        # Create Outlook client
+        outlook_client = OutlookClient(outlook_config)
+        
+        # Authenticate
+        if outlook_client.authenticate():
+            print("✅ Outlook authentication successful")
+            
+            # Process emails
+            processed_count = outlook_client.process_new_emails()
+            print(f"✅ Processed {processed_count} Outlook emails")
+        else:
+            print("❌ Outlook authentication failed")
+            
+    except Exception as e:
+        print(f"❌ Error processing Outlook: {e}")
+
+def display_unified_email_stats():
+    """Display statistics for unified email system"""
+    print("\n📊 Unified Email Statistics")
+    print("=" * 30)
+    
+    try:
+        client = UnifiedEmailClient()
+        stats = client.get_statistics()
+        
+        print(f"Total emails processed: {stats['total_emails']}")
+        print(f"Emails with attachments: {stats['emails_with_attachments']}")
+        print(f"Successfully unlocked PDFs: {stats['unlocked_pdfs']}")
+        print(f"Total unlock attempts: {stats['total_unlock_attempts']}")
+        print(f"Unlock success rate: {stats['unlock_success_rate']:.1f}%")
+        
+        print("\n📧 By Provider:")
+        for provider, count in stats['provider_counts'].items():
+            print(f"  {provider.upper()}: {count} emails")
+        
+        # Also show traditional Gmail stats
+        print("\n📊 Gmail-specific Statistics:")
+        display_email_stats()
+        
+    except Exception as e:
+        print(f"❌ Error getting statistics: {e}")
+
+def unlock_all_pdfs_unified():
+    """Unlock all PDFs using unified system"""
+    print("\n🔓 Unlocking all PDFs (Unified System)...")
+    
+    try:
+        client = UnifiedEmailClient()
+        
+        # Check if Gmail client is available for enhanced unlocking
+        if not client.gmail_client:
+            print("⚠️ Gmail client not available. Initializing...")
+            if os.path.exists('credentials.json'):
+                client.add_gmail_provider("Gmail", "credentials.json")
+            else:
+                print("❌ Gmail credentials required for advanced PDF unlocking")
+                return
+        
+        client.unlock_all_pdfs()
+        print("✅ PDF unlocking completed!")
+        
+    except Exception as e:
+        print(f"❌ Error unlocking PDFs: {e}")
 
 def database_management_menu():
     """Database management submenu"""

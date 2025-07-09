@@ -914,6 +914,82 @@ RESPOND ONLY WITH THE JSON, NO OTHER TEXT.
         
         return list(candidates)
 
+    def process_new_statements(self, months_back=2):
+        """Process new credit card statement emails"""
+        logger.info("Starting to process new statement emails...")
+        
+        try:
+            # Search for new statement emails
+            messages = self.search_credit_card_emails(months_back)
+            
+            if not messages:
+                logger.info("No new statement emails found")
+                return 0
+            
+            processed_count = 0
+            
+            for message in messages:
+                msg_id = message['id']
+                
+                # Skip if already processed
+                if self.is_already_processed(msg_id):
+                    logger.debug(f"Email {msg_id} already processed, skipping")
+                    continue
+                
+                try:
+                    # Get message details
+                    msg_details = self.get_message_details(msg_id)
+                    if not msg_details:
+                        logger.warning(f"Could not get details for message {msg_id}")
+                        continue
+                    
+                    # Extract basic information
+                    payload = msg_details.get('payload', {})
+                    headers = payload.get('headers', [])
+                    
+                    subject = next((h['value'] for h in headers if h['name'] == 'Subject'), '')
+                    sender = next((h['value'] for h in headers if h['name'] == 'From'), '')
+                    date = next((h['value'] for h in headers if h['name'] == 'Date'), '')
+                    snippet = msg_details.get('snippet', '')
+                    
+                    # Get email body
+                    email_body = self.get_email_body(msg_id)
+                    
+                    # Extract password rules and hints
+                    password_hints, password_rules = self.extract_password_rules_and_hints(
+                        email_body, subject, sender
+                    )
+                    
+                    # Download PDF attachments if any
+                    attachments = self.download_pdf_attachments(msg_id, payload)
+                    
+                    # Store email metadata in database
+                    self.store_email_metadata(
+                        msg_id, subject, sender, date, snippet, 
+                        password_hints, password_rules, attachments, email_body
+                    )
+                    
+                    # Generate password candidates for this email
+                    if password_hints or password_rules:
+                        password_candidates = self.generate_passwords_for_email(msg_id)
+                        if password_candidates:
+                            self.save_password_candidates(msg_id, password_candidates)
+                            logger.info(f"Generated {len(password_candidates)} password candidates for email {msg_id}")
+                    
+                    processed_count += 1
+                    logger.info(f"✅ Processed email from {sender}: {subject}")
+                    
+                except Exception as e:
+                    logger.error(f"❌ Error processing email {msg_id}: {e}")
+                    continue
+            
+            logger.info(f"✅ Successfully processed {processed_count} new statement emails")
+            return processed_count
+            
+        except Exception as e:
+            logger.error(f"❌ Error in process_new_statements: {e}")
+            raise
+
 class LocalLLMManager:
     """Manages different local LLM backends"""
     
@@ -1022,8 +1098,8 @@ if __name__ == "__main__":
     client = EnhancedGmailClient()
     
     # Add some sample personal data (you should customize this)
-    client.add_personal_data('date_of_birth', '01011990', 'Date of birth in DDMMYYYY format')
-    client.add_personal_data('mobile_number', '1234567890', 'Mobile number')
+    client.add_personal_data('date_of_birth', '10031984', 'Date of birth in DDMMYYYY format')
+    client.add_personal_data('mobile_number', '971525562885', 'Mobile number')
     client.add_personal_data('name', 'John', 'First name')
     client.add_personal_data('card_number', '1234567890123456', 'Credit card number')
     

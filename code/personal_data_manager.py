@@ -9,9 +9,37 @@ from datetime import datetime
 import json
 
 class PersonalDataManager:
+    
+    def _insert_default_data_if_empty(self):
+	    conn = sqlite3.connect(self.db_path)
+	    c = conn.cursor()
+	    c.execute('SELECT COUNT(*) FROM personal_data')
+	    count = c.fetchone()[0]
+	    if count == 0:
+	        # Add default values — customize as needed
+	        default_data = [
+	            ('date_of_birth', '10031984', 'Default DOB'),
+	            ('mobile_number', '971525562885', 'UAE mobile'),
+	            ('first_name', 'Nguyen', 'Vietnamese first name'),
+	            ('last_name', 'Hoach', 'Vietnamese last name'),
+	            ('card_number_last4', '1234', 'Dummy card last 4'),
+	            ('account_number_last4', '5678', 'Dummy account last 4'),
+	            ('national_id_last4', '9012', 'Dummy national ID'),
+	            ('custom_hint', '19842885', 'DOB + mobile suffix'),
+	        ]
+	        for data_type, value, description in default_data:
+	            c.execute('''
+	                INSERT INTO personal_data (data_type, data_value, description, created_date)
+	                VALUES (?, ?, ?, ?)
+	            ''', (data_type, value, description, datetime.now().isoformat()))
+	        conn.commit()
+	        print("✅ Default personal data inserted.")
+	    conn.close()
+    
     def __init__(self, db_path='email_data.db'):
         self.db_path = db_path
         self._init_db()
+        self._insert_default_data_if_empty()
     
     def _init_db(self):
         """Initialize database if it doesn't exist"""
@@ -85,10 +113,10 @@ class PersonalDataManager:
         
         # Common personal data types
         data_types = [
-            ('date_of_birth', 'Date of birth (DDMMYYYY format)', 'e.g., 01011990'),
-            ('mobile_number', 'Mobile/Phone number', 'e.g., 971501234567'),
-            ('first_name', 'First name', 'e.g., Ahmed'),
-            ('last_name', 'Last name', 'e.g., Ali'),
+            ('date_of_birth', 'Date of birth (DDMMYYYY format)', 'e.g., 100384'),
+            ('mobile_number', 'Mobile/Phone number', 'e.g., 912525562885'),
+            ('first_name', 'First name', 'e.g., Calvin'),
+            ('last_name', 'Last name', 'e.g., Hon'),
             ('card_number_last4', 'Last 4 digits of credit card', 'e.g., 1234'),
             ('account_number_last4', 'Last 4 digits of account number', 'e.g., 5678'),
             ('national_id_last4', 'Last 4 digits of national ID', 'e.g., 9012'),
