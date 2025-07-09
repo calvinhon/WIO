@@ -236,7 +236,7 @@ def setup_gmail_provider(client):
     
     credentials_file = input("Enter Gmail credentials file path (default: credentials.json): ").strip()
     if not credentials_file:
-        credentials_file = "credentials.json"
+        credentials_file = "./secret/credentials.json"
     
     if not os.path.exists(credentials_file):
         print(f"❌ Credentials file not found: {credentials_file}")
@@ -440,7 +440,7 @@ def unlock_all_pdfs_unified():
         # Check if Gmail client is available for enhanced unlocking
         if not client.gmail_client:
             print("⚠️ Gmail client not available. Initializing...")
-            if os.path.exists('credentials.json'):
+            if os.path.exists('./secret/credentials.json'):
                 client.add_gmail_provider("Gmail", "credentials.json")
             else:
                 print("❌ Gmail credentials required for advanced PDF unlocking")

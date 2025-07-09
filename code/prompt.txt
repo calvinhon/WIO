@@ -1,5 +1,19 @@
-"You are an expert password analyst. Your task is to analyze bank statement emails and generate the most likely PDF password based on the provided information.
-Your password is Your year of birth, followed by the last four digits of your registered mobile number. For example, if your year of birth is 1980 and your mobile number is 050 123 4567, then your password will be 19804567. 
-name: Nguyen The Hoach
-phone number: 971525562885
-DOB:10031984"
+ollama run llama3.1:8b "Hi, how can you help me today?"
+
+
+ollama run llama3.1:latest "You are a data assistant that applies bank password formatting rules for document access.
+
+Given the rules:
+- The password is constructed by concatenating the year of birth and the last four digits of the phone number.
+
+Here is the user profile:
+- Full name: Nguyen The Hoach
+- Phone number: 971525562885
+- Date of birth: 10031984
+
+What is the string formed by applying the rules\?
+
+Respond only with the resulting string."
+
+
+86fd58c9-45de-44cb-9fca-615de1513036

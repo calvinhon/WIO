@@ -31,7 +31,7 @@ class PasswordCandidate:
 class EnhancedGmailClient:
     SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
-    def __init__(self, credentials_file='credentials.json', db_path='email_data.db'):
+    def __init__(self, credentials_file='./secret/credentials.json', db_path='email_data.db'):
         self.credentials_file = credentials_file
         self.service = None
         self.authenticate()
@@ -143,7 +143,7 @@ class EnhancedGmailClient:
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(self.credentials_file, self.SCOPES)
                 creds = flow.run_local_server(port=0)
-            with open('token.json', 'w') as token:
+            with open('./secret/token.json', 'w') as token:
                 token.write(creds.to_json())
         self.service = build('gmail', 'v1', credentials=creds)
 
