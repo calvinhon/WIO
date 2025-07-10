@@ -4,7 +4,7 @@ DOCKERFILE_DIR=.
 DOCKERFILE_HASH_FILE="$DOCKERFILE_DIR/.dockerfile_hash"
 IMAGE_NAME="flutter-dev"
 PROJECT_DIR="$PWD"
-DEFAULT_APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
+DEFAULT_APK_PATH="email/build/app/outputs/flutter-apk/app-release.apk"
 
 # Only try to start Docker Desktop if on macOS
 if [[ "$OSTYPE" == "darwin"* ]]; then

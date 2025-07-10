@@ -231,16 +231,38 @@ class TextExtractor:
                 return ""
             
             doc = self.try_open_pdf(pdf_path, passwords)
+
+            # If all generated passwords fail, prompt the user for up to 3 manual attempts
             if not doc:
-                logger.error("Could not unlock the encrypted PDF")
-                return ""
-            
+                for attempt in range(3):
+                    user_pwd = input(f"Enter password for PDF (attempt {attempt + 1}/3): ")
+                    try:
+                        doc = fitz.open(pdf_path)
+                        if doc.needs_pass:
+                            if doc.authenticate(user_pwd):
+                                logger.info("PDF decrypted successfully with user-provided password.")
+                                break
+                            else:
+                                logger.error("Incorrect password.")
+                                doc.close()
+                                doc = None
+                        else:
+                            logger.info("PDF opened without password.")
+                            break
+                    except Exception as e:
+                        logger.error(f"Error opening PDF with provided password: {e}")
+                        doc = None
+                else:
+                    logger.error("Could not unlock the encrypted PDF after 3 attempts.")
+                    return ""
+
             # Extract text from the unlocked document
             try:
                 text = self.extract_text_with_ocr(doc)
                 return text
             finally:
-                doc.close()
+                if doc:
+                    doc.close()
         else:
             # PDF is not encrypted, open normally
             try:
