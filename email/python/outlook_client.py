@@ -267,7 +267,7 @@ class OutlookClient:
 			date_filter = past_date.strftime('%Y-%m-%dT%H:%M:%SZ')
 
 			# Step 2: Bank-related keywords
-			keywords = ["credit card", "account statement", "bank statement"]
+			keywords = ["credit card", "bank statement"]
 
 			# Step 3: Previously processed IDs
 			conn = sqlite3.connect(self.db_path)
