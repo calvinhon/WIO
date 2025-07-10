@@ -23,6 +23,5 @@ __pycache__/
 .packages
 .pub-cache/
 .pub/
-build/
 flutter_*.log
 .fvm/ 
