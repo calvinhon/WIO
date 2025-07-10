@@ -629,7 +629,15 @@ def process_gmail_only():
             check=True
         )
         print("✅ Text extraction complete. See assets/output for results.")
-        
+
+        # Call ollama_parse_txt.py on the extracted text files
+        print("🤖 Parsing extracted text files with Ollama...")
+        subprocess.run(
+            ["python3", "ollama_parse_txt.py", "assets/output"],
+            check=True
+        )
+        print("✅ Ollama parsing complete.")
+
     except Exception as e:
         print(f"❌ Error processing Gmail: {e}")
         logger.error(f"Gmail processing error: {e}")

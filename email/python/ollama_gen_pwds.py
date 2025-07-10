@@ -32,7 +32,7 @@ IMPORTANT:
 - If you cannot generate a password following the rules, leave it blank or put "N/A" but still return 10 entries.
 """
     result = subprocess.run(
-        ['ollama', 'run', 'mistral'],
+        ['ollama', 'run', 'mistral:instruct'],
         input=prompt.encode(),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
