@@ -45,7 +45,7 @@ WIO/
 
 ### Outlook Setup
 Uses default test configuration or custom Azure app:
-- Client ID: `86fd58c9-45de-44cb-9fca-615de1513036`
+- Client ID: default in code
 - Tenant: `common`
 
 ## 📊 Data Storage
