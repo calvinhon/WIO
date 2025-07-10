@@ -5,6 +5,7 @@ import 'models/sms_message_model.dart';
 import 'screens/nlp_analysis_screen.dart';
 import 'screens/sms_categorization_screen.dart';
 import 'screens/bank_sms_manager_screen.dart';
+import 'screens/dashboard_screen.dart';
 
 void main() {
   runApp(const SmsReaderApp());
@@ -350,6 +351,28 @@ class _SmsReaderHomePageState extends State<SmsReaderHomePage> {
                     label: const Text('Bank SMS DB'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 200, // Match width to other buttons
+                  child: ElevatedButton.icon(
+                    onPressed: _isLoading ? null : () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.dashboard),
+                    label: const Text('Dashboard'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
                       foregroundColor: Colors.white,
                     ),
                   ),

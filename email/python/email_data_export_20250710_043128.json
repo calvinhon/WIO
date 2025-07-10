@@ -1,0 +1,78 @@
+{
+  "emails": [],
+  "personal_data": [
+    [
+      1,
+      "date_of_birth",
+      "10031984",
+      "Default DOB",
+      "2025-07-10T04:24:40.107393",
+      "manual",
+      1.0
+    ],
+    [
+      2,
+      "mobile_number",
+      "971525562885",
+      "UAE mobile",
+      "2025-07-10T04:24:40.107627",
+      "manual",
+      1.0
+    ],
+    [
+      3,
+      "first_name",
+      "Nguyen",
+      "first name",
+      "2025-07-10T04:24:40.107649",
+      "manual",
+      1.0
+    ],
+    [
+      4,
+      "last_name",
+      "Hoach",
+      "last name",
+      "2025-07-10T04:24:40.107660",
+      "manual",
+      1.0
+    ],
+    [
+      5,
+      "card_number_last4",
+      "1234",
+      "Dummy card last 4",
+      "2025-07-10T04:24:40.107669",
+      "manual",
+      1.0
+    ],
+    [
+      6,
+      "account_number_last4",
+      "5678",
+      "Dummy account last 4",
+      "2025-07-10T04:24:40.107678",
+      "manual",
+      1.0
+    ],
+    [
+      7,
+      "national_id_last4",
+      "9012",
+      "Dummy national ID",
+      "2025-07-10T04:24:40.107687",
+      "manual",
+      1.0
+    ],
+    [
+      8,
+      "custom_hint",
+      "19842885",
+      "DOB + mobile suffix",
+      "2025-07-10T04:24:40.107696",
+      "manual",
+      1.0
+    ]
+  ],
+  "exported_at": "2025-07-10T04:31:28.253664"
+}
